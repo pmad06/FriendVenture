@@ -2,11 +2,13 @@ import { NativeTabs } from 'expo-router/unstable-native-tabs';
 import React from 'react';
 import { useColorScheme } from 'react-native';
 
+import { useAuth } from '@/context/auth-context';
 import { Colors } from '@/constants/theme';
 
 export default function AppTabs() {
   const scheme = useColorScheme();
   const colors = Colors[scheme === 'unspecified' ? 'light' : scheme];
+  const { isAuthenticated } = useAuth();
 
   return (
     <NativeTabs
@@ -29,8 +31,10 @@ export default function AppTabs() {
         />
       </NativeTabs.Trigger>
 
-      <NativeTabs.Trigger name="login">
-        <NativeTabs.Trigger.Label>Login</NativeTabs.Trigger.Label>
+      <NativeTabs.Trigger name="account">
+        <NativeTabs.Trigger.Label>
+          {isAuthenticated ? 'Logout' : 'Login'}
+        </NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
     </NativeTabs>
   );
