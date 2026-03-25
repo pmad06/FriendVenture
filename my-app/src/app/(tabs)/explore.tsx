@@ -1,3 +1,9 @@
+<<<<<<< HEAD
+import React, { useState } from 'react';
+import { Platform, Pressable, ScrollView, StyleSheet, TextInput } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+=======
 import { Image } from 'expo-image';
 import { SymbolView } from 'expo-symbols';
 import React from 'react';
@@ -5,6 +11,7 @@ import { Platform, Pressable, ScrollView, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ExternalLink } from '@/components/external-link';
+>>>>>>> 1d5b211d4249bfe9d39022807dd9b1860c972099
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { Collapsible } from '@/components/ui/collapsible';
@@ -12,12 +19,59 @@ import { WebBadge } from '@/components/web-badge';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
+<<<<<<< HEAD
+type Task = {
+  id: string;
+  title: string;
+  type: 'task' | 'assignment' | 'exam';
+}
+
+export default function TasksScreen() {
+  const safeAreaInsets = useSafeAreaInsets();
+  const theme = useTheme();
+
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [inputText, setInputText] = useState('');
+
+=======
 export default function TabTwoScreen() {
   const safeAreaInsets = useSafeAreaInsets();
+>>>>>>> 1d5b211d4249bfe9d39022807dd9b1860c972099
   const insets = {
     ...safeAreaInsets,
     bottom: safeAreaInsets.bottom + BottomTabInset + Spacing.three,
   };
+<<<<<<< HEAD
+
+  const addTask = (type: Task['type']) => {
+    if (inputText.trim() === '') return;
+    
+    const newTask: Task = {
+      id: Date.now().toString(),
+      title: inputText,
+      type,
+    };
+    setTasks([...tasks, newTask]);
+    setInputText('');
+  };
+
+  const platformStyle = Platform.select({
+    web: { paddingTop: Spacing.six, paddingBottom: Spacing.four}
+  });
+
+  const renderTaskList = (type: Task['type']) => {
+    const filtered = tasks.filter(t => t.type === type);
+    if (filtered.length === 0) {
+      return <ThemedText type="small" style={styles.emptyText}>No {type}s yet!</ThemedText>;
+    }
+    return filtered.map(task => (
+      <ThemedView key={task.id} style={styles.taskItem}>
+        <ThemedText>{task.title}</ThemedText>
+      </ThemedView>
+    ));
+  };
+
+=======
   const theme = useTheme();
 
   const contentPlatformStyle = Platform.select({
@@ -33,10 +87,55 @@ export default function TabTwoScreen() {
     },
   });
 
+>>>>>>> 1d5b211d4249bfe9d39022807dd9b1860c972099
   return (
     <ScrollView
       style={[styles.scrollView, { backgroundColor: theme.background }]}
       contentInset={insets}
+<<<<<<< HEAD
+      contentContainerStyle={[styles.contentContainer, platformStyle]}>
+      
+      <ThemedView style={styles.container}>
+        <ThemedView style={styles.titleContainer}>
+          <ThemedText type="subtitle">My Study Planner</ThemedText>
+          
+          {/* Input Area */}
+          <ThemedView type="backgroundElement" style={styles.inputWrapper}>
+            <TextInput
+              style={[styles.input, { color: theme.text }]}
+              placeholder="What needs to be done?"
+              placeholderTextColor={theme.textSecondary}
+              value={inputText}
+              onChangeText={setInputText}
+            />
+            <ThemedView style={styles.buttonRow}>
+              <Pressable style={styles.addButton} onPress={() => addTask('task')}>
+                <ThemedText type="smallBold">+ Task</ThemedText>
+              </Pressable>
+              <Pressable style={[styles.addButton, { backgroundColor: '#4A90E2' }]} onPress={() => addTask('assignment')}>
+                <ThemedText type="smallBold" style={{ color: '#fff' }}>+ Assignment</ThemedText>
+              </Pressable>
+              <Pressable style={[styles.addButton, { backgroundColor: '#E94E77' }]} onPress={() => addTask('exam')}>
+                <ThemedText type="smallBold" style={{ color: '#fff' }}>+ Exam</ThemedText>
+              </Pressable>
+            </ThemedView>
+          </ThemedView>
+        </ThemedView>
+
+        <ThemedView style={styles.sectionsWrapper}>
+          <Collapsible title={`Tasks (${tasks.filter(t => t.type === 'task').length})`}>
+             {renderTaskList('task')}
+          </Collapsible>
+
+          <Collapsible title={`Assignments (${tasks.filter(t => t.type === 'assignment').length})`}>
+             {renderTaskList('assignment')}
+          </Collapsible>
+
+          <Collapsible title={`Exams (${tasks.filter(t => t.type === 'exam').length})`}>
+             {renderTaskList('exam')}
+          </Collapsible>
+        </ThemedView>
+=======
       contentContainerStyle={[styles.contentContainer, contentPlatformStyle]}>
       <ThemedView style={styles.container}>
         <ThemedView style={styles.titleContainer}>
@@ -121,6 +220,7 @@ export default function TabTwoScreen() {
           </Collapsible>
         </ThemedView>
         {Platform.OS === 'web' && <WebBadge />}
+>>>>>>> 1d5b211d4249bfe9d39022807dd9b1860c972099
       </ThemedView>
     </ScrollView>
   );
@@ -132,6 +232,49 @@ const styles = StyleSheet.create({
   container: { maxWidth: MaxContentWidth, flexGrow: 1 },
   titleContainer: {
     gap: Spacing.three,
+<<<<<<< HEAD
+    paddingHorizontal: Spacing.four,
+    paddingVertical: Spacing.six,
+  },
+  inputWrapper: {
+    padding: Spacing.three,
+    borderRadius: Spacing.three,
+    gap: Spacing.two,
+  },
+  input: {
+    fontSize: 16,
+    paddingVertical: Spacing.two,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    gap: Spacing.two,
+    flexWrap: 'wrap',
+  },
+  addButton: {
+    paddingHorizontal: Spacing.three,
+    paddingVertical: Spacing.one,
+    borderRadius: Spacing.two,
+    backgroundColor: '#eee',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sectionsWrapper: {
+    gap: Spacing.four,
+    paddingHorizontal: Spacing.four,
+  },
+  taskItem: {
+    paddingVertical: Spacing.two,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(0,0,0,0.1)',
+  },
+  emptyText: {
+    fontStyle: 'italic',
+    opacity: 0.6,
+  }
+});
+=======
     alignItems: 'center',
     paddingHorizontal: Spacing.four,
     paddingVertical: Spacing.six,
@@ -161,3 +304,4 @@ const styles = StyleSheet.create({
   },
   imageReact: { width: 100, height: 100, alignSelf: 'center' },
 });
+>>>>>>> 1d5b211d4249bfe9d39022807dd9b1860c972099

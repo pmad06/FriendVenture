@@ -1,17 +1,16 @@
-import { Redirect, type Href } from 'expo-router';
+import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import React from 'react';
+import { useColorScheme } from 'react-native';
 
+import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import AppTabs from '@/components/app-tabs';
-import { useAuth } from '@/context/auth-context';
 
-export default function TabsLayout() {
-  const { isAuthenticated, isLoading } = useAuth();
-
-  if (isLoading) return null;
-
-  if (!isAuthenticated) {
-    // Cast needed until expo-router regenerates typed routes on first `npx expo start`
-    return <Redirect href={'/login' as Href} />;
-  }
-
-  return <AppTabs />;
+export default function TabLayout() {
+  const colorScheme = useColorScheme();
+  return (
+    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <AnimatedSplashOverlay />
+      <AppTabs />
+    </ThemeProvider>
+  );
 }
