@@ -1,10 +1,13 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { Tabs } from 'expo-router';
 import React from 'react';
 import { useColorScheme } from 'react-native';
 
 import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import AppTabs from '@/components/app-tabs';
 import { AuthProvider } from '@/context/auth-context';
+
+// Auth screens are navigable but hidden from the tab bar
+const noTab = { href: null as null, tabBarStyle: { display: 'none' as const } };
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -12,7 +15,14 @@ export default function RootLayout() {
     <AuthProvider>
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
         <AnimatedSplashOverlay />
-        <AppTabs />
+        <Tabs screenOptions={{ headerShown: false }}>
+          <Tabs.Screen name="index" options={{ title: 'Home' }} />
+          <Tabs.Screen name="explore" options={{ title: 'Explore' }} />
+          <Tabs.Screen name="account" options={{ title: 'Account' }} />
+          <Tabs.Screen name="login" options={noTab} />
+          <Tabs.Screen name="create-account" options={noTab} />
+          <Tabs.Screen name="forgot-password" options={noTab} />
+        </Tabs>
       </ThemeProvider>
     </AuthProvider>
   );
