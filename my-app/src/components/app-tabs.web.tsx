@@ -7,12 +7,14 @@ import {
   TabListProps,
 } from 'expo-router/ui';
 import { SymbolView } from 'expo-symbols';
-import React from 'react';
+import { useRouter, type Href } from 'expo-router';
+import React, { useState } from 'react';
 import { Pressable, useColorScheme, View, StyleSheet } from 'react-native';
 
 import { ExternalLink } from './external-link';
 import { ThemedText } from './themed-text';
 import { ThemedView } from './themed-view';
+import { useAuth } from '@/context/auth-context';
 
 import { Colors, MaxContentWidth, Spacing } from '@/constants/theme';
 
@@ -28,12 +30,61 @@ export default function AppTabs() {
           <TabTrigger name="explore" href="/explore" asChild>
             <TabButton>Explore</TabButton>
           </TabTrigger>
-          <TabTrigger name="login" href="/login" asChild>
-            <TabButton>Login</TabButton>
-          </TabTrigger>
         </CustomTabList>
       </TabList>
     </Tabs>
+  );
+}
+
+function AuthButton() {
+  const { isAuthenticated, username, logout } = useAuth();
+  const router = useRouter();
+  const scheme = useColorScheme();
+  const colors = Colors[scheme === 'unspecified' ? 'light' : scheme];
+  const [open, setOpen] = useState(false);
+
+  if (!isAuthenticated) {
+    return (
+      <Pressable
+        onPress={() => router.push('/login' as Href)}
+        style={({ pressed }) => pressed && styles.pressed}>
+        <ThemedView type="backgroundElement" style={styles.tabButtonView}>
+          <ThemedText type="small" themeColor="textSecondary">Login</ThemedText>
+        </ThemedView>
+      </Pressable>
+    );
+  }
+
+  return (
+    <View style={styles.authWrapper}>
+      <Pressable
+        onPress={() => setOpen((v) => !v)}
+        style={({ pressed }) => pressed && styles.pressed}>
+        <ThemedView type="backgroundElement" style={styles.tabButtonView}>
+          <ThemedText type="small" themeColor="textSecondary">
+            {username ?? 'Account'} ▾
+          </ThemedText>
+        </ThemedView>
+      </Pressable>
+
+      {open && (
+        <>
+          {/* invisible backdrop to close dropdown on outside click */}
+          <Pressable style={styles.backdrop} onPress={() => setOpen(false)} />
+          <ThemedView type="backgroundElement" style={styles.dropdown}>
+            <Pressable
+              style={({ pressed }) => [styles.dropdownItem, pressed && styles.pressed]}
+              onPress={async () => {
+                setOpen(false);
+                await logout();
+                router.replace('/login' as Href);
+              }}>
+              <ThemedText type="small" themeColor="textSecondary">Logout</ThemedText>
+            </Pressable>
+          </ThemedView>
+        </>
+      )}
+    </View>
   );
 }
 
@@ -63,6 +114,8 @@ export function CustomTabList(props: TabListProps) {
         </ThemedText>
 
         {props.children}
+
+        <AuthButton />
 
         <ExternalLink href="https://docs.expo.dev" asChild>
           <Pressable style={styles.externalPressable}>
@@ -115,5 +168,36 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.one,
     marginLeft: Spacing.three,
+  },
+  authWrapper: {
+    position: 'relative',
+  },
+  backdrop: {
+    position: 'fixed' as any,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 10,
+  },
+  dropdown: {
+    position: 'absolute',
+    top: '100%',
+    right: 0,
+    marginTop: Spacing.one,
+    borderRadius: Spacing.three,
+    paddingVertical: Spacing.two,
+    paddingHorizontal: Spacing.three,
+    zIndex: 20,
+    minWidth: 100,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+  },
+  dropdownItem: {
+    paddingVertical: Spacing.two,
+    paddingHorizontal: Spacing.two,
+    borderRadius: Spacing.two,
   },
 });

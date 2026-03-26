@@ -33,7 +33,7 @@ export default function AppTabs() {
 
       <NativeTabs.Trigger name="account">
         <NativeTabs.Trigger.Label>
-          {isAuthenticated ? 'Logout' : 'Login'}
+          {isAuthenticated ? 'Account' : 'Login'}
         </NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
     </NativeTabs>
