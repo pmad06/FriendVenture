@@ -7,7 +7,7 @@ import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { AuthProvider } from '@/context/auth-context';
 
 // Auth screens are navigable but hidden from the tab bar
-const noTab = { href: null as null, tabBarStyle: { display: 'none' as const } };
+const noTab = { href: null as null };
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
