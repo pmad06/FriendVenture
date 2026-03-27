@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Switch } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Switch, TextInput, TouchableOpacity, Text } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
+import { Button } from '@react-navigation/elements';
 
 export default function SettingsScreen() {
     const theme = useTheme();
 
     const [pushNotifs, setPushNotifs] = useState(true);
-    const [friendNotifs, setFriendNotifs] = useState(true);
+
+    const [text, setText] = useState('');
 
     return (
         <ScrollView
@@ -27,13 +29,31 @@ export default function SettingsScreen() {
                     <ThemedText type="smallBold">ACCOUNT</ThemedText>
                     <ThemedView type="backgroundElement" style={styles.inputWrapper}>
                         <Pressable style={styles.taskItem}>
-                            <ThemedText>👤  Personal Info</ThemedText>
+                            <ThemedText>Personal Info</ThemedText>
+                            <TextInput 
+                                style={styles.input}
+                                onChangeText={setText}
+                                value={text}
+                                placeholder="First Name"
+                            />
+                            <TextInput 
+                                style={styles.input}
+                                onChangeText={setText}
+                                value={text}
+                                placeholder="Last Name"
+                            />
                         </Pressable>
                         <Pressable style={styles.taskItem}>
-                            <ThemedText>🔒  Password & Security</ThemedText>
-                        </Pressable>
-                        <Pressable style={styles.taskItem}>
-                            <ThemedText>🚪  Log Out</ThemedText>
+                            <ThemedText>Password & Security</ThemedText>
+                             <TextInput 
+                                style={styles.input}
+                                onChangeText={setText}
+                                value={text}
+                                placeholder="Change your password"
+                            />
+                            <TouchableOpacity style={styles.button} onPress ={() => alert('button clicked')}>
+                                <Text style={styles.text}>Reset Pasword</Text>
+                            </TouchableOpacity>
                         </Pressable>
                     </ThemedView>
 
@@ -41,12 +61,9 @@ export default function SettingsScreen() {
                     <ThemedText type="smallBold">NOTIFICATIONS</ThemedText>
                     <ThemedView type="backgroundElement" style={styles.inputWrapper}>
                         <ThemedView style={[styles.taskItem, styles.rowBetween]}>
-                            <ThemedText>🔔  Push Notifications</ThemedText>
-                            <Switch value={pushNotifs} onValueChange={setPushNotifs} />
-                        </ThemedView>
-                        <ThemedView style={[styles.taskItem, styles.rowBetween]}>
-                            <ThemedText>💌  Friend Requests</ThemedText>
-                            <Switch value={friendNotifs} onValueChange={setFriendNotifs} />
+                            <ThemedText>Push Notifications</ThemedText>
+                            <Switch value={pushNotifs} onValueChange={(newValue) =>{ if (newValue) alert('notifications enabled!') 
+                                setPushNotifs(newValue)}} />
                         </ThemedView>
                     </ThemedView>
 
@@ -54,17 +71,15 @@ export default function SettingsScreen() {
                     <ThemedText type="smallBold">PET & GAME</ThemedText>
                     <ThemedView type="backgroundElement" style={styles.inputWrapper}>
                         <Pressable style={styles.taskItem}>
-                            <ThemedText>🐣  Pet Customization</ThemedText>
+                            <ThemedText>Pet Customization</ThemedText>
                         </Pressable>
                         <Pressable style={styles.taskItem}>
-                            <ThemedText>🎯  Weekly Goals</ThemedText>
+                            <ThemedText>Weekly Goals</ThemedText>
                         </Pressable>
                         <Pressable style={styles.taskItem}>
-                            <ThemedText>📊  Weekly Summary</ThemedText>
+                            <ThemedText>Weekly Summary</ThemedText>
                         </Pressable>
                     </ThemedView>
-
-                    <ThemedText type="small" style={styles.emptyText}>FriendVenture v1.0.0</ThemedText>
 
                 </ThemedView>
             </ThemedView>
@@ -105,4 +120,21 @@ const styles = StyleSheet.create({
         opacity: 0.6,
         textAlign: 'center',
     },
+    input:{
+        height: 40,
+        margin: 12,
+        borderWidth: 1,
+        padding: 10,
+        borderRadius: 10,
+    },
+    button:{
+        backgroundColor: '#f7f3f3',
+        padding: 10,
+        borderRadius: 8,
+        alignItems: 'center',
+    },
+    text:{
+        color: 'black',
+        fontSize: 16,
+    }
 });
