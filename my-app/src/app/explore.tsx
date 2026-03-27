@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { Platform, Pressable, ScrollView, StyleSheet, TextInput } from 'react-native';
+import { Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { Collapsible } from '@/components/ui/collapsible';
 import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
@@ -48,59 +47,66 @@ export default function TasksScreen() {
       return <ThemedText type="small" style={styles.emptyText}>No {type}s yet!</ThemedText>;
     }
     return filtered.map(task => (
-      <ThemedView key={task.id} style={styles.taskItem}>
+      <View key={task.id} style={styles.taskItem}>
         <ThemedText>{task.title}</ThemedText>
-      </ThemedView>
+      </View>
     ));
   };
 
   return (
     <ScrollView
-      style={[styles.scrollView, { backgroundColor: theme.background }]}
+      style={[styles.scrollView, { backgroundColor: '#C9ECF6' }]}
       contentInset={insets}
       contentContainerStyle={[styles.contentContainer, platformStyle]}>
       
-      <ThemedView style={styles.container}>
-        <ThemedView style={styles.titleContainer}>
-          <ThemedText type="subtitle">My Study Planner</ThemedText>
+      <View style={styles.container}>
+        <View style={styles.titleContainer}>
+          <ThemedText type="subtitle" style={{ fontFamily: 'Ariel', fontSize: 28 }}>To-Do List</ThemedText>
           
           {/* Input Area */}
-          <ThemedView type="backgroundElement" style={styles.inputWrapper}>
+          <View style={styles.inputWrapper}>
             <TextInput
               style={[styles.input, { color: theme.text }]}
-              placeholder="What needs to be done?"
-              placeholderTextColor={theme.textSecondary}
+              placeholder="Add to your to-do list!"
+              placeholderTextColor="#000"
               value={inputText}
               onChangeText={setInputText}
             />
-            <ThemedView style={styles.buttonRow}>
-              <Pressable style={styles.addButton} onPress={() => addTask('task')}>
-                <ThemedText type="smallBold">+ Task</ThemedText>
+            <View style={styles.buttonRow}>
+              <Pressable style={[styles.addButton, { backgroundColor: '#9bd0ec' }]} onPress={() => addTask('task')}>
+                <ThemedText type="smallBold"  style={{ color: '#fff' }}>+ Task</ThemedText>
               </Pressable>
-              <Pressable style={[styles.addButton, { backgroundColor: '#4A90E2' }]} onPress={() => addTask('assignment')}>
+              <Pressable style={[styles.addButton, { backgroundColor: '#9bd0ec' }]} onPress={() => addTask('assignment')}>
                 <ThemedText type="smallBold" style={{ color: '#fff' }}>+ Assignment</ThemedText>
               </Pressable>
-              <Pressable style={[styles.addButton, { backgroundColor: '#E94E77' }]} onPress={() => addTask('exam')}>
-                <ThemedText type="smallBold" style={{ color: '#fff' }}>+ Exam</ThemedText>
+              <Pressable style={[styles.addButton, { backgroundColor: '#9bd0ec' }]} onPress={() => addTask('exam')}>
+                <ThemedText type="smallBold"  style={{ color: '#fff' }}>+ Exam</ThemedText>
               </Pressable>
-            </ThemedView>
-          </ThemedView>
-        </ThemedView>
+            </View>
+          </View>
+        </View>
 
-        <ThemedView style={styles.sectionsWrapper}>
-          <Collapsible title={`Tasks (${tasks.filter(t => t.type === 'task').length})`}>
-             {renderTaskList('task')}
-          </Collapsible>
+        <View style={styles.sectionsWrapper}>
+          <View style={{ backgroundColor: '#C9ECF6'}}>
+            <Collapsible title={`Tasks (${tasks.filter(t => t.type === 'task').length})`}>
+              {renderTaskList('task')}
+            </Collapsible>
+          </View>
 
-          <Collapsible title={`Assignments (${tasks.filter(t => t.type === 'assignment').length})`}>
+          <View style={{ backgroundColor: '#C9ECF6'}}>
+            <Collapsible title={`Assignments (${tasks.filter(t => t.type === 'assignment').length})`}>
              {renderTaskList('assignment')}
           </Collapsible>
+          </View>
 
-          <Collapsible title={`Exams (${tasks.filter(t => t.type === 'exam').length})`}>
+          <View style={{ backgroundColor: '#C9ECF6'}}>
+            <Collapsible title={`Exams (${tasks.filter(t => t.type === 'exam').length})`}>
              {renderTaskList('exam')}
           </Collapsible>
-        </ThemedView>
-      </ThemedView>
+          </View>
+          
+        </View>
+      </View>
     </ScrollView>
   );
 }
@@ -108,7 +114,7 @@ export default function TasksScreen() {
 const styles = StyleSheet.create({
   scrollView: { flex: 1 },
   contentContainer: { flexDirection: 'row', justifyContent: 'center' },
-  container: { maxWidth: MaxContentWidth, flexGrow: 1 },
+  container: { maxWidth: MaxContentWidth, flexGrow: 1, backgroundColor: '#C9ECF6'},
   titleContainer: {
     gap: Spacing.three,
     paddingHorizontal: Spacing.four,
@@ -123,18 +129,21 @@ const styles = StyleSheet.create({
     fontSize: 16,
     paddingVertical: Spacing.two,
     borderBottomWidth: 1,
-    borderBottomColor: '#ccc',
+    borderBottomColor: '#fff',
+    borderRadius: Spacing.two,
+    borderColor: '#000'
   },
   buttonRow: {
     flexDirection: 'row',
     gap: Spacing.two,
     flexWrap: 'wrap',
+    backgroundColor: 'transparent',
   },
   addButton: {
     paddingHorizontal: Spacing.three,
     paddingVertical: Spacing.one,
     borderRadius: Spacing.two,
-    backgroundColor: '#eee',
+    backgroundColor: '#fff',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -150,5 +159,5 @@ const styles = StyleSheet.create({
   emptyText: {
     fontStyle: 'italic',
     opacity: 0.6,
-  }
+  },
 });
