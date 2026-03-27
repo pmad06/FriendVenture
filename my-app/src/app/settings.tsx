@@ -1,45 +1,46 @@
-import React, { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Switch, TextInput, TouchableOpacity, Text } from 'react-native';
+import { useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Switch, TextInput, TouchableOpacity, Text, View } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { Button } from '@react-navigation/elements';
 
 export default function SettingsScreen() {
     const theme = useTheme();
 
     const [pushNotifs, setPushNotifs] = useState(true);
 
-    const [text, setText] = useState('');
+    const [firstName, setFirstName] = useState('');
+    const [lastName, setLastName] = useState('');
+    const [password, setPassword] = useState('');
 
     return (
         <ScrollView
-            style={[styles.scrollView, { backgroundColor: theme.background }]}
+            style={[styles.scrollView, { backgroundColor: '#C9ECF6' }]}
             contentContainerStyle={styles.contentContainer}>
 
-            <ThemedView style={styles.container}>
-                <ThemedView style={styles.titleContainer}>
+            <View style={styles.container}>
+                <View style={styles.titleContainer}>
                     <ThemedText type="subtitle">Settings</ThemedText>
-                </ThemedView>
+                </View>
 
-                <ThemedView style={styles.sectionsWrapper}>
+                <View style={styles.sectionsWrapper}>
 
                     {/* Account */}
                     <ThemedText type="smallBold">ACCOUNT</ThemedText>
-                    <ThemedView type="backgroundElement" style={styles.inputWrapper}>
+                    <View style={styles.inputWrapper}>
                         <Pressable style={styles.taskItem}>
                             <ThemedText>Personal Info</ThemedText>
                             <TextInput 
                                 style={styles.input}
-                                onChangeText={setText}
-                                value={text}
+                                onChangeText={setFirstName}
+                                value={firstName}
                                 placeholder="First Name"
                             />
                             <TextInput 
                                 style={styles.input}
-                                onChangeText={setText}
-                                value={text}
+                                onChangeText={setLastName}
+                                value={lastName}
                                 placeholder="Last Name"
                             />
                         </Pressable>
@@ -47,24 +48,24 @@ export default function SettingsScreen() {
                             <ThemedText>Password & Security</ThemedText>
                              <TextInput 
                                 style={styles.input}
-                                onChangeText={setText}
-                                value={text}
+                                onChangeText={setPassword}
+                                value={password}
                                 placeholder="Change your password"
                             />
                             <TouchableOpacity style={styles.button} onPress ={() => alert('button clicked')}>
                                 <Text style={styles.text}>Reset Pasword</Text>
                             </TouchableOpacity>
                         </Pressable>
-                    </ThemedView>
+                    </View>
 
                     {/* Notifications */}
                     <ThemedText type="smallBold">NOTIFICATIONS</ThemedText>
                     <ThemedView type="backgroundElement" style={styles.inputWrapper}>
-                        <ThemedView style={[styles.taskItem, styles.rowBetween]}>
+                        <View style={[styles.taskItem, styles.rowBetween]}>
                             <ThemedText>Push Notifications</ThemedText>
                             <Switch value={pushNotifs} onValueChange={(newValue) =>{ if (newValue) alert('notifications enabled!') 
                                 setPushNotifs(newValue)}} />
-                        </ThemedView>
+                        </View>
                     </ThemedView>
 
                     {/* Pet & Game */}
@@ -81,8 +82,8 @@ export default function SettingsScreen() {
                         </Pressable>
                     </ThemedView>
 
-                </ThemedView>
-            </ThemedView>
+                </View>
+            </View>
         </ScrollView>
     );
 }
@@ -100,6 +101,7 @@ const styles = StyleSheet.create({
         padding: Spacing.three,
         borderRadius: Spacing.three,
         gap: Spacing.two,
+        backgroundColor: '#9bd0ec',
     },
     sectionsWrapper: {
         gap: Spacing.four,
@@ -128,7 +130,7 @@ const styles = StyleSheet.create({
         borderRadius: 10,
     },
     button:{
-        backgroundColor: '#f7f3f3',
+        backgroundColor: '#C9ECF6',
         padding: 10,
         borderRadius: 8,
         alignItems: 'center',
