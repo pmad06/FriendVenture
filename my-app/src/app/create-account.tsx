@@ -122,11 +122,12 @@ export default function CreateAccount() {
           onChangeText={setConfirmPassword}
         />
 
-        <Pressable style={styles.button} onPress={handleSignup} disabled={loading}>
-          {loading
+        <Pressable style={({hovered}) => [styles.button, hovered && styles.buttonHovered ]} onPress={handleSignup} disabled={loading}>
+          {({hovered}) => [
+            loading
             ? <ActivityIndicator color="white" />
-            : <Text style={styles.buttonText}>Create Account</Text>
-          }
+            : <Text style={[styles.buttonText, hovered && styles.buttonTextHovered]}>Create Account</Text>
+          ]}
         </Pressable>
 
         <Pressable onPress={() => router.replace('/login' as Href)}>
@@ -142,10 +143,12 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: 'center',
     padding: 20,
-    backgroundColor: 'white',
+    backgroundColor: '#9bd0ec',
+    color: '#0F2B3A',
   },
   container: {
     alignItems: 'center',
+    backgroundColor: '#C9ECF6',
     borderWidth: 1,
     borderColor: 'hsl(0, 0%, 80%)',
     borderRadius: 10,
@@ -156,8 +159,9 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   input: {
+    backgroundColor: '#9bd0ec',
     borderWidth: 1,
-    borderColor: 'hsl(0, 0%, 80%)',
+    borderColor: '#0F2B3A',
     borderRadius: 10,
     width: 250,
     padding: 10,
@@ -172,17 +176,22 @@ const styles = StyleSheet.create({
     width: 120,
   },
   button: {
-    backgroundColor: 'hsl(247, 83%, 66%)',
+    backgroundColor: '#0F2B3A',
     borderWidth: 2,
-    borderColor: 'hsl(247, 83%, 33%)',
     borderRadius: 10,
     width: 250,
     padding: 10,
     marginTop: 20,
     alignItems: 'center',
   },
+  buttonHovered: {
+    backgroundColor: '#9bd0ec',
+  },
   buttonText: {
     color: 'white',
+  },
+  buttonTextHovered: {
+    color: '#0F2B3A',
   },
   error: {
     color: 'hsl(0, 80%, 55%)',
@@ -192,7 +201,7 @@ const styles = StyleSheet.create({
     width: 250,
   },
   linkText: {
-    color: 'hsl(247, 83%, 66%)',
+    color: '#0F2B3A',
     fontSize: 13,
     marginTop: 16,
   },
