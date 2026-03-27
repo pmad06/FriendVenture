@@ -16,7 +16,7 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: '#9bd0ec',
   },
   content: {
     flex: 1,
@@ -27,10 +27,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: 'hsl(247, 83%, 66%)',
+    color: 'hsl(201, 59%, 14%)',
   },
   subtitle: {
     fontSize: 16,
-    color: 'hsl(0, 0%, 50%)',
+    color: 'hsl(200, 37%, 24%)',
   },
 });

@@ -66,14 +66,18 @@ export default function Login() {
         />
 
         <Pressable
-          style={styles.button}
           onPress={handleLogin}
           disabled={loading}
+          style = {({hovered}) => [
+            styles.button, 
+            hovered && styles.buttonHovered,
+          ]}
         >
-          {loading
-            ? <ActivityIndicator color="white" />
-            : <Text style={styles.buttonText}>Submit</Text>
-          }
+          { ({hovered}) => [
+              loading
+              ? <ActivityIndicator color="white" />
+              : <Text style={[styles.buttonText, hovered && styles.buttonTextHovered]}>Submit</Text>
+          ]}
         </Pressable>
 
         <View style={styles.links}>
@@ -92,12 +96,14 @@ export default function Login() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: '#9bd0ec',
     justifyContent: 'center',
     alignItems: 'center',
   },
   container: {
     alignItems: 'center',
+    backgroundColor: '#C9ECF6',
+    color: '#0F2B3A',
     borderWidth: 1,
     borderColor: 'hsl(0, 0%, 80%)',
     borderRadius: 10,
@@ -108,25 +114,31 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   input: {
+    backgroundColor: '#9bd0ec',
     borderWidth: 1,
-    borderColor: 'hsl(0, 0%, 80%)',
+    borderColor: '#0F2B3A',
     borderRadius: 10,
     width: 250,
     padding: 10,
     marginBottom: 10,
   },
   button: {
-    backgroundColor: 'hsl(247, 83%, 66%)',
+    backgroundColor: '#0F2B3A',
     borderWidth: 2,
-    borderColor: 'hsl(247, 83%, 33%)',
     borderRadius: 10,
     width: 250,
     padding: 10,
     marginTop: 20,
     alignItems: 'center',
   },
+  buttonHovered: {
+     backgroundColor: '#9bd0ec',
+  },
   buttonText: {
     color: 'white',
+  },
+  buttonTextHovered: {
+     color: '#0F2B3A',
   },
   error: {
     color: 'hsl(0, 80%, 55%)',
@@ -139,7 +151,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   linkText: {
-    color: 'hsl(247, 83%, 66%)',
+    color: '#0F2B3A',
     fontSize: 13,
   },
 });

@@ -56,7 +56,7 @@ export default function TasksScreen() {
 
   return (
     <ScrollView
-      style={[styles.scrollView, { backgroundColor: theme.background }]}
+      style={[styles.scrollView, { backgroundColor: '#C9ECF6' }]}
       contentInset={insets}
       contentContainerStyle={[styles.contentContainer, platformStyle]}>
       
@@ -74,14 +74,14 @@ export default function TasksScreen() {
               onChangeText={setInputText}
             />
             <ThemedView style={styles.buttonRow}>
-              <Pressable style={styles.addButton} onPress={() => addTask('task')}>
-                <ThemedText type="smallBold">+ Task</ThemedText>
+              <Pressable style={[styles.addButton, { backgroundColor: '#9bd0ec' }]} onPress={() => addTask('task')}>
+                <ThemedText type="smallBold"  style={{ color: '#0F2B3A' }}>+ Task</ThemedText>
               </Pressable>
-              <Pressable style={[styles.addButton, { backgroundColor: '#4A90E2' }]} onPress={() => addTask('assignment')}>
-                <ThemedText type="smallBold" style={{ color: '#fff' }}>+ Assignment</ThemedText>
+              <Pressable style={[styles.addButton, { backgroundColor: '#9bd0ec' }]} onPress={() => addTask('assignment')}>
+                <ThemedText type="smallBold" style={{ color: '#0F2B3A' }}>+ Assignment</ThemedText>
               </Pressable>
-              <Pressable style={[styles.addButton, { backgroundColor: '#E94E77' }]} onPress={() => addTask('exam')}>
-                <ThemedText type="smallBold" style={{ color: '#fff' }}>+ Exam</ThemedText>
+              <Pressable style={[styles.addButton, { backgroundColor: '#9bd0ec' }]} onPress={() => addTask('exam')}>
+                <ThemedText type="smallBold"  style={{ color: '#0F2B3A' }}>+ Exam</ThemedText>
               </Pressable>
             </ThemedView>
           </ThemedView>
@@ -108,7 +108,7 @@ export default function TasksScreen() {
 const styles = StyleSheet.create({
   scrollView: { flex: 1 },
   contentContainer: { flexDirection: 'row', justifyContent: 'center' },
-  container: { maxWidth: MaxContentWidth, flexGrow: 1 },
+  container: { maxWidth: MaxContentWidth, flexGrow: 1, backgroundColor: '#C9ECF6'},
   titleContainer: {
     gap: Spacing.three,
     paddingHorizontal: Spacing.four,
