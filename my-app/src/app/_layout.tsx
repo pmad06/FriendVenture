@@ -7,7 +7,7 @@ import { AnimatedSplashOverlay } from '@/components/animated-icon';
 import { AuthProvider } from '@/context/auth-context';
 
 // Auth screens are navigable but hidden from the tab bar
-const noTab = { href: null as null, tabBarStyle: { display: 'none' as const } };
+const noTab = { href: null as null };
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -17,7 +17,7 @@ export default function RootLayout() {
         <AnimatedSplashOverlay />
         <Tabs screenOptions={{ headerShown: false }}>
           <Tabs.Screen name="index" options={{ title: 'Home' }} />
-          <Tabs.Screen name="explore" options={{ title: 'Explore' }} />
+          <Tabs.Screen name="explore" options={{ title: 'Tasks' }} />
           <Tabs.Screen name="account" options={{ title: 'Account' }} />
           <Tabs.Screen name="login" options={noTab} />
           <Tabs.Screen name="create-account" options={noTab} />
