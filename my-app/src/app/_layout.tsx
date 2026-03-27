@@ -17,7 +17,7 @@ export default function RootLayout() {
         <AnimatedSplashOverlay />
         <Tabs screenOptions={{ headerShown: false }}>
           <Tabs.Screen name="index" options={{ title: 'Home' }} />
-          <Tabs.Screen name="explore" options={{ title: 'Explore' }} />
+          <Tabs.Screen name="explore" options={{ title: 'Tasks' }} />
           <Tabs.Screen name="account" options={{ title: 'Account' }} />
           <Tabs.Screen name="login" options={noTab} />
           <Tabs.Screen name="create-account" options={noTab} />
