@@ -1,14 +1,7 @@
-import { Redirect, type Href } from 'expo-router';
 import { StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { useAuth } from '@/context/auth-context';
-
 export default function HomeScreen() {
-  const { isAuthenticated, isLoading } = useAuth();
-
-  if (isLoading) return null;
-  if (!isAuthenticated) return <Redirect href={'/login' as Href} />;
 
   return (
     <SafeAreaView style={styles.container}>
