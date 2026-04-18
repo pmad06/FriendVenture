@@ -1,28 +1,64 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TextInput, FlatList, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-const MOCK_USERS = [
-  { id: '1', name: 'Alex Johnson' },
-  { id: '2', name: 'Jamie Lee' },
-  { id: '3', name: 'Sam Rivera' },
-  { id: '4', name: 'Taylor Kim' },
-  { id: '5', name: 'Jordan Smith' },
-];
+import { useAuth } from '@/context/auth-context';
+
+const API = 'http://localhost:5000';
+
+type User = { id: number; username: string; name: string };
 
 export default function HomeScreen() {
+  const { token } = useAuth();
   const [query, setQuery] = useState('');
-  const [friends, setFriends] = useState<string[]>([]);
+  const [results, setResults] = useState<User[]>([]);
+  const [friends, setFriends] = useState<User[]>([]);
 
-  const results = MOCK_USERS.filter(u =>
-    u.name.toLowerCase().includes(query.toLowerCase()) && query.length > 0
-  );
+  useEffect(() => {
+    if (!token) return;
+    fetch(`${API}/api/friends`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(r => r.json())
+      .then(data => { if (Array.isArray(data)) setFriends(data); })
+      .catch(() => {});
+  }, [token]);
 
-  const addFriend = (id: string) => {
-    if (!friends.includes(id)) setFriends([...friends, id]);
+  useEffect(() => {
+    if (!token || query.length === 0) { setResults([]); return; }
+    fetch(`${API}/api/users/search?q=${encodeURIComponent(query)}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(r => r.json())
+      .then(data => { if (Array.isArray(data)) setResults(data); })
+      .catch(() => {});
+  }, [query, token]);
+
+  const isFriend = (id: number) => friends.some(f => f.id === id);
+
+  const addFriend = (user: User) => {
+    if (!token || isFriend(user.id)) return;
+    fetch(`${API}/api/friends/add`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ friend_id: user.id }),
+    })
+      .then(r => r.json())
+      .then(data => { if (data.ok) setFriends(prev => [...prev, user]); })
+      .catch(() => {});
   };
 
-  const isFriend = (id: string) => friends.includes(id);
+  const removeFriend = (user: User) => {
+    if (!token) return;
+    fetch(`${API}/api/friends/remove`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ friend_id: user.id }),
+    })
+      .then(r => r.json())
+      .then(data => { if (data.ok) setFriends(prev => prev.filter(f => f.id !== user.id)); })
+      .catch(() => {});
+  };
 
 return (
     <SafeAreaView style={styles.container}>
@@ -41,7 +77,7 @@ return (
         {results.length > 0 && (
           <FlatList
             data={results}
-            keyExtractor={item => item.id}
+            keyExtractor={item => String(item.id)}
             style={styles.resultsList}
             renderItem={({ item }) => (
               <View style={styles.resultRow}>
@@ -51,8 +87,7 @@ return (
                 <Text style={styles.resultName}>{item.name}</Text>
                 <TouchableOpacity
                   style={[styles.addButton, isFriend(item.id) && styles.addButtonAdded]}
-                  onPress={() => addFriend(item.id)}
-                  disabled={isFriend(item.id)}
+                  onPress={() => isFriend(item.id) ? removeFriend(item) : addFriend(item)}
                 >
                   <Text style={styles.addButtonText}>{isFriend(item.id) ? '✓' : '+'}</Text>
                 </TouchableOpacity>
@@ -66,8 +101,8 @@ return (
           <Text style={styles.emptyText}>Add some friends!</Text>
         ) : (
           <FlatList
-            data={MOCK_USERS.filter(u => friends.includes(u.id))}
-            keyExtractor={item => item.id}
+            data={friends}
+            keyExtractor={item => String(item.id)}
             renderItem={({ item }) => (
               <View style={styles.resultRow}>
                 <View style={styles.avatar}>
