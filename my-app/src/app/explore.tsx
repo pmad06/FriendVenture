@@ -36,7 +36,7 @@ export default function TasksScreen() {
     const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
     if (days < 0) return { label: 'Overdue', color: '#e05252' };
     if (days === 0) return { label: 'Due today', color: '#e09a52' };
-    return { label: `${days} day${days !== 1 ? 's' : ''} left`, color: '#2a7fa5' };
+    return { label: `${days} day${days !== 1 ? 's' : ''} left`, color: '#000' };
   };
 
   const addTask = (type: Task['type']) => {
@@ -114,19 +114,19 @@ export default function TasksScreen() {
                 borderRight: '1px solid #000',
                 borderRadius: Spacing.two,
                 background: 'transparent',
-                color: '#0F2B3A',
+                color: '#000',
                 width: '100%',
                 outline: 'none',
               }}
             />
             <View style={styles.buttonRow}>
-              <Pressable style={[styles.addButton, { backgroundColor: '#9bd0ec' }]} onPress={() => addTask('task')}>
+              <Pressable style={[styles.addButton, { backgroundColor: '#C9ECF6' }]} onPress={() => addTask('task')}>
                 <ThemedText type="small" style={{ color: '#000' }}>+ Task</ThemedText>
               </Pressable>
-              <Pressable style={[styles.addButton, { backgroundColor: '#9bd0ec' }]} onPress={() => addTask('assignment')}>
+              <Pressable style={[styles.addButton, { backgroundColor: '#C9ECF6' }]} onPress={() => addTask('assignment')}>
                 <ThemedText type="small" style={{ color: '#000' }}>+ Assignment</ThemedText>
               </Pressable>
-              <Pressable style={[styles.addButton, { backgroundColor: '#9bd0ec' }]} onPress={() => addTask('exam')}>
+              <Pressable style={[styles.addButton, { backgroundColor: '#C9ECF6' }]} onPress={() => addTask('exam')}>
                 <ThemedText type="small" style={{ color: '#000' }}>+ Exam</ThemedText>
               </Pressable>
             </View>
@@ -134,19 +134,19 @@ export default function TasksScreen() {
         </View>
 
         <View style={styles.sectionsWrapper}>
-          <View style={{ backgroundColor: '#C9ECF6' }}>
+          <View style={{ backgroundColor: '#9bd0ec' }}>
             <Collapsible title={`Tasks (${tasks.filter(t => t.type === 'task').length})`}>
               {renderTaskList('task')}
             </Collapsible>
           </View>
 
-          <View style={{ backgroundColor: '#C9ECF6' }}>
+          <View style={{ backgroundColor: '#9bd0ec' }}>
             <Collapsible title={`Assignments (${tasks.filter(t => t.type === 'assignment').length})`}>
               {renderTaskList('assignment')}
             </Collapsible>
           </View>
 
-          <View style={{ backgroundColor: '#C9ECF6' }}>
+          <View style={{ backgroundColor: '#9bd0ec' }}>
             <Collapsible title={`Exams (${tasks.filter(t => t.type === 'exam').length})`}>
               {renderTaskList('exam')}
             </Collapsible>
@@ -163,7 +163,7 @@ const styles = StyleSheet.create({
   container: { 
     maxWidth: MaxContentWidth, 
     flexGrow: 1, 
-    backgroundColor: '#C9ECF6',
+    backgroundColor: '#9bd0ec',
     borderWidth: 1,
     borderColor: '#0F2B3A',
     borderRadius: Spacing.three,
