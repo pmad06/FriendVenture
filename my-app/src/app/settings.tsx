@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/context/auth-context';
+import { API_BASE_URL } from '@/constants/api';
 import { Pressable, ScrollView, StyleSheet, Switch, TextInput, TouchableOpacity, Text, View } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
@@ -7,12 +9,51 @@ import { useTheme } from '@/hooks/use-theme';
 
 export default function SettingsScreen() {
     const theme = useTheme();
+    const { token } = useAuth();
 
     const [pushNotifs, setPushNotifs] = useState(true);
 
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
-    const [password, setPassword] = useState('');
+    const [username, setUsername] = useState('');
+    const [currentPassword, setCurrentPassword] = useState('');
+    const [newPassword, setNewPassword] = useState('');
+
+    // loads the user's name — runs again once token is ready
+    useEffect(() => {
+        if (!token) return;
+        fetch(`${API_BASE_URL}/api/user/profile`, {
+            headers: { Authorization: `Bearer ${token}` }
+        })
+        .then(r => r.json())
+        .then(data => {
+            setFirstName(data.firstName ?? '');
+            setLastName(data.lastName ?? '');
+            setUsername(data.username ?? '');
+        });
+    }, [token]);
+
+    // when user presses save on their name
+    const saveProfile = async () => {
+        const res = await fetch(`${API_BASE_URL}/api/user/profile`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ firstName, lastName, username })
+        });
+        const data = await res.json();
+        alert(res.ok ? 'Profile saved!' : data.error);
+    };
+
+    // Called when user presses Reset Password
+    const changePassword = async () => {
+        const res = await fetch(`${API_BASE_URL}/api/user/password`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ currentPassword, newPassword })
+        });
+        const data = await res.json();
+        alert(res.ok ? 'Password changed!' : data.error);
+    };
 
     return (
         <ScrollView
@@ -37,22 +78,42 @@ export default function SettingsScreen() {
                                 value={firstName}
                                 placeholder="First Name"
                             />
-                            <TextInput 
+                            <TextInput
                                 style={styles.input}
                                 onChangeText={setLastName}
                                 value={lastName}
                                 placeholder="Last Name"
                             />
+                            <TextInput
+                                style={styles.input}
+                                onChangeText={setUsername}
+                                value={username}
+                                placeholder="Username"
+                                autoCapitalize="none"
+                            />
+
+                            <TouchableOpacity style={styles.button} onPress={saveProfile}>
+                                <Text style={styles.text}>Save</Text>
+                            </TouchableOpacity>
+
                         </Pressable>
                         <Pressable style={styles.taskItem}>
                             <ThemedText>Password & Security</ThemedText>
-                             <TextInput 
+                             <TextInput
                                 style={styles.input}
-                                onChangeText={setPassword}
-                                value={password}
-                                placeholder="Change your password"
+                                onChangeText={setCurrentPassword}
+                                value={currentPassword}
+                                placeholder="Current password"
+                                secureTextEntry={true}
                             />
-                            <TouchableOpacity style={styles.button} onPress ={() => alert('button clicked')}>
+                            <TextInput
+                                style={styles.input}
+                                onChangeText={setNewPassword}
+                                value={newPassword}
+                                placeholder="New password"
+                                secureTextEntry={true}
+                            />
+                            <TouchableOpacity style={styles.button} onPress ={changePassword}>
                                 <Text style={styles.text}>Reset Pasword</Text>
                             </TouchableOpacity>
                         </Pressable>
@@ -129,6 +190,9 @@ const styles = StyleSheet.create({
         padding: 10,
         borderRadius: 10,
         color: 'black',
+        backgroundColor: 'white',
+        // @ts-ignore
+        WebkitBoxShadow: '0 0 0 1000px white inset',
     },
     button:{
         backgroundColor: '#C9ECF6',

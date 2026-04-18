@@ -73,11 +73,11 @@ export default function Login() {
             hovered && styles.buttonHovered,
           ]}
         >
-          { ({hovered}) => [
+          { ({hovered}) => (
               loading
               ? <ActivityIndicator color="white" />
               : <Text style={[styles.buttonText, hovered && styles.buttonTextHovered]}>Submit</Text>
-          ]}
+          )}
         </Pressable>
 
         <View style={styles.links}>
