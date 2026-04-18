@@ -123,11 +123,11 @@ export default function CreateAccount() {
         />
 
         <Pressable style={({hovered}) => [styles.button, hovered && styles.buttonHovered ]} onPress={handleSignup} disabled={loading}>
-          {({hovered}) => [
+          {({hovered}) => (
             loading
             ? <ActivityIndicator color="white" />
             : <Text style={[styles.buttonText, hovered && styles.buttonTextHovered]}>Create Account</Text>
-          ]}
+          )}
         </Pressable>
 
         <Pressable onPress={() => router.replace('/login' as Href)}>
