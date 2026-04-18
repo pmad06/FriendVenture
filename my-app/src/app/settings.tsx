@@ -30,6 +30,7 @@ export default function SettingsScreen() {
             setFirstName(data.firstName ?? '');
             setLastName(data.lastName ?? '');
             setUsername(data.username ?? '');
+            setPushNotifs(data.pushNotifications);
         });
     }, [token]);
 
@@ -124,8 +125,14 @@ export default function SettingsScreen() {
                     <ThemedView type="backgroundElement" style={styles.inputWrapper}>
                         <View style={[styles.taskItem, styles.rowBetween]}>
                             <ThemedText>Push Notifications</ThemedText>
-                            <Switch value={pushNotifs} onValueChange={(newValue) =>{ if (newValue) alert('notifications enabled!') 
-                                setPushNotifs(newValue)}} />
+                            <Switch onValueChange={async (newValue) =>{ 
+                                setPushNotifs(newValue);
+                                await fetch(`${API_BASE_URL}/api/user/notifications`, {
+                                    method: 'PUT',
+                                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                                    body: JSON.stringify({ pushNotifications: newValue })
+                                });
+                            }} value={pushNotifs} />
                         </View>
                     </ThemedView>
 
