@@ -22,6 +22,84 @@ def generate_auth_token(user_id: int, username: str) -> str:
     }
     return jwt.encode(payload, SECRET_KEY, algorithm="HS256")
 
+def get_current_user_id():
+    auth_header = request.headers.get("Authorization", "")
+    if not auth_header.startswith("Bearer "):
+        return None
+    token = auth_header.split(" ")[1]
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
+        return payload["user_id"]
+    except jwt.InvalidTokenError:
+        return None
+
+@app.route("/api/user/profile", methods=["GET"])
+def get_profile():
+    user_id = get_current_user_id()
+    if not user_id:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    db = get_db()
+    try:
+        user = db.execute("SELECT first_name, last_name, username FROM users WHERE id = ?", (user_id,)).fetchone()
+        return jsonify({"firstName": user["first_name"], "lastName": user["last_name"], "username": user["username"]}), 200
+    finally:
+        db.close()
+
+@app.route("/api/user/profile", methods=["PUT"])
+def update_profile():
+    user_id = get_current_user_id()
+    if not user_id:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    data = request.get_json()
+    first_name = data.get("firstName", "").strip()
+    last_name = data.get("lastName", "").strip()
+    username = data.get("username", "").strip().lower()
+
+    if not first_name or not last_name or not username:
+        return jsonify({"error": "First name, last name, and username are required"}), 400
+
+    db = get_db()
+    try:
+        db.execute(
+            "UPDATE users SET first_name = ?, last_name = ?, username = ? WHERE id = ?",
+            (first_name, last_name, username, user_id)
+        )
+        db.commit()
+        return jsonify({"message": "Profile updated!"}), 200
+    except Exception as e:
+        if "users.username" in str(e):
+            return jsonify({"error": "Username is already taken"}), 409
+        return jsonify({"error": "Could not update profile"}), 500
+    finally:
+        db.close()
+
+@app.route("/api/user/password", methods=["PUT"])
+def change_password():
+    user_id = get_current_user_id()
+    if not user_id:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    data = request.get_json()
+    current_password = data.get("currentPassword", "")
+    new_password = data.get("newPassword", "")
+
+    if len(new_password) < 6:
+        return jsonify({"error": "New password must be at least 6 characters"}), 400
+
+    db = get_db()
+    try:
+        user = db.execute("SELECT password_hash FROM users WHERE id = ?", (user_id,)).fetchone()
+        if not user or not bcrypt.checkpw(current_password.encode("utf-8"), user["password_hash"].encode("utf-8")):
+            return jsonify({"error": "Current password is incorrect"}), 401
+
+        new_hash = bcrypt.hashpw(new_password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+        db.execute("UPDATE users SET password_hash = ? WHERE id = ?", (new_hash, user_id))
+        db.commit()
+        return jsonify({"message": "Password changed successfully"}), 200
+    finally:
+        db.close()
 
 # ── Signup ──────────────────────────────────────────────────────────────────
 
