@@ -40,7 +40,7 @@ export default function AppTabs() {
 }
 
 function AuthButton() {
-  const { isAuthenticated, username, logout } = useAuth();
+  const { isAuthenticated, logout } = useAuth();
   const router = useRouter();
   const scheme = useColorScheme();
   const colors = Colors[scheme === 'unspecified' ? 'light' : scheme];
@@ -52,7 +52,7 @@ function AuthButton() {
         onPress={() => router.push('/login' as Href)}
         style={({ pressed }) => pressed && styles.pressed}>
         <ThemedView type="backgroundElement" style={styles.tabButtonView}>
-          <ThemedText type="small" themeColor="textSecondary">Login</ThemedText>
+          <ThemedText type="small" themeColor="textSecondary">Log in</ThemedText>
         </ThemedView>
       </Pressable>
     );
@@ -65,7 +65,7 @@ function AuthButton() {
         style={({ pressed }) => pressed && styles.pressed}>
         <ThemedView type="backgroundElement" style={styles.tabButtonView}>
           <ThemedText type="small" themeColor="textSecondary">
-            {username ?? 'Account'} ▾
+            Account ▾
           </ThemedText>
         </ThemedView>
       </Pressable>

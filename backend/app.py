@@ -101,6 +101,128 @@ def change_password():
     finally:
         db.close()
 
+def get_current_user_id():
+    auth = request.headers.get("Authorization", "")
+    if not auth.startswith("Bearer "):
+        return None
+    try:
+        payload = jwt.decode(auth[7:], SECRET_KEY, algorithms=["HS256"])
+        return payload["user_id"]
+    except jwt.InvalidTokenError:
+        return None
+
+
+# ── Users: search ────────────────────────────────────────────────────────────
+
+@app.route("/api/users/search", methods=["GET"])
+def search_users():
+    user_id = get_current_user_id()
+    if not user_id:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    q = request.args.get("q", "").strip()
+    if not q:
+        return jsonify([]), 200
+
+    db = get_db()
+    try:
+        rows = db.execute(
+            """
+            SELECT id, username, first_name || ' ' || last_name AS name
+            FROM users
+            WHERE id != ?
+              AND (username LIKE ? OR first_name || ' ' || last_name LIKE ?)
+            LIMIT 20
+            """,
+            (user_id, f"%{q}%", f"%{q}%"),
+        ).fetchall()
+        return jsonify([dict(r) for r in rows]), 200
+    finally:
+        db.close()
+
+
+# ── Friends: add ─────────────────────────────────────────────────────────────
+
+@app.route("/api/friends/add", methods=["POST"])
+def add_friend():
+    user_id = get_current_user_id()
+    if not user_id:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    data = request.get_json()
+    friend_id = data.get("friend_id") if data else None
+    if not friend_id:
+        return jsonify({"error": "friend_id is required"}), 400
+
+    db = get_db()
+    try:
+        db.execute(
+            "INSERT OR IGNORE INTO friendships (user_id, friend_id) VALUES (?, ?)",
+            (user_id, friend_id),
+        )
+        db.execute(
+            "INSERT OR IGNORE INTO friendships (user_id, friend_id) VALUES (?, ?)",
+            (friend_id, user_id),
+        )
+        db.commit()
+        return jsonify({"ok": True}), 200
+    finally:
+        db.close()
+
+
+# ── Friends: list ─────────────────────────────────────────────────────────────
+
+@app.route("/api/friends", methods=["GET"])
+def get_friends():
+    user_id = get_current_user_id()
+    if not user_id:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    db = get_db()
+    try:
+        rows = db.execute(
+            """
+            SELECT u.id, u.username, u.first_name || ' ' || u.last_name AS name
+            FROM friendships f
+            JOIN users u ON u.id = f.friend_id
+            WHERE f.user_id = ?
+            """,
+            (user_id,),
+        ).fetchall()
+        return jsonify([dict(r) for r in rows]), 200
+    finally:
+        db.close()
+
+
+# ── Friends: remove ──────────────────────────────────────────────────────────
+
+@app.route("/api/friends/remove", methods=["POST"])
+def remove_friend():
+    user_id = get_current_user_id()
+    if not user_id:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    data = request.get_json()
+    friend_id = data.get("friend_id") if data else None
+    if not friend_id:
+        return jsonify({"error": "friend_id is required"}), 400
+
+    db = get_db()
+    try:
+        db.execute(
+            "DELETE FROM friendships WHERE user_id = ? AND friend_id = ?",
+            (user_id, friend_id),
+        )
+        db.execute(
+            "DELETE FROM friendships WHERE user_id = ? AND friend_id = ?",
+            (friend_id, user_id),
+        )
+        db.commit()
+        return jsonify({"ok": True}), 200
+    finally:
+        db.close()
+
+
 # ── Signup ──────────────────────────────────────────────────────────────────
 
 @app.route("/api/auth/signup", methods=["POST"])
