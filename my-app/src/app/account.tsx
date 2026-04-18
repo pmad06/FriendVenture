@@ -1,26 +1,33 @@
+import { useEffect } from 'react';
 import { useRouter, type Href } from 'expo-router';
-import { Pressable, StyleSheet, Text } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 import { useAuth } from '@/context/auth-context';
 
 export default function AccountScreen() {
   const router = useRouter();
-  const { logout, username } = useAuth();
+  const { isAuthenticated, logout, username } = useAuth();
 
-  const handleLogout = async () => {
-    await logout();
-    router.replace('/login' as Href);
-  };
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.replace('/login' as Href);
+    }
+  }, [isAuthenticated]);
+
+  if (!isAuthenticated) return null;
 
   return (
-    <Pressable style={styles.screen} onPress={() => router.back()}>
-      <Pressable style={styles.container} onPress={e => e.stopPropagation()}>
-        {username ? (
-          <Text style={styles.greeting}>Logged in as {username}</Text>
-        ) : null}
-
-        <Pressable style={styles.button} onPress={handleLogout}>
-          <Text style={styles.buttonText}>Log Out</Text>
+    <Pressable style={styles.backdrop} onPress={() => router.back()}>
+      <Pressable style={styles.dropdown} onPress={e => e.stopPropagation()}>
+        {username ? <Text style={styles.username}>{username}</Text> : null}
+        <View style={styles.divider} />
+        <Pressable
+          style={styles.logoutBtn}
+          onPress={async () => {
+            await logout();
+            router.replace('/login' as Href);
+          }}>
+          <Text style={styles.logoutText}>Log Out</Text>
         </Pressable>
       </Pressable>
     </Pressable>
@@ -28,43 +35,44 @@ export default function AccountScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: {
+  backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    backgroundColor: 'rgba(0,0,0,0.2)',
     justifyContent: 'flex-end',
-    alignItems: 'center',
-    paddingBottom: 90,
+    alignItems: 'flex-end',
+    paddingBottom: 70,
+    paddingRight: 16,
   },
-  container: {
-    alignItems: 'center',
+  dropdown: {
     backgroundColor: 'white',
-    borderRadius: 14,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    gap: 12,
+    borderRadius: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+    minWidth: 160,
     shadowColor: '#000',
-    shadowOpacity: 0.12,
+    shadowOpacity: 0.15,
     shadowRadius: 12,
-    shadowOffset: { width: 0, height: -2 },
+    shadowOffset: { width: 0, height: 2 },
     elevation: 8,
-    minWidth: 200,
   },
-  greeting: {
-    fontSize: 14,
-    textAlign: 'center',
+  username: {
+    fontSize: 13,
     color: 'hsl(0, 0%, 40%)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
   },
-  button: {
-    backgroundColor: 'hsl(247, 83%, 66%)',
-    borderWidth: 2,
-    borderColor: 'hsl(247, 83%, 33%)',
-    borderRadius: 10,
-    width: 250,
-    padding: 10,
-    alignItems: 'center',
+  divider: {
+    height: 1,
+    backgroundColor: 'hsl(0, 0%, 90%)',
+    marginHorizontal: 8,
   },
-  buttonText: {
-    color: 'white',
+  logoutBtn: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  logoutText: {
     fontSize: 15,
+    color: 'hsl(247, 83%, 60%)',
+    fontWeight: '500',
   },
 });
