@@ -101,16 +101,6 @@ def change_password():
     finally:
         db.close()
 
-def get_current_user_id():
-    auth = request.headers.get("Authorization", "")
-    if not auth.startswith("Bearer "):
-        return None
-    try:
-        payload = jwt.decode(auth[7:], SECRET_KEY, algorithms=["HS256"])
-        return payload["user_id"]
-    except jwt.InvalidTokenError:
-        return None
-
 
 # ── Users: search ────────────────────────────────────────────────────────────
 
