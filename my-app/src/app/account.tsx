@@ -38,10 +38,8 @@ const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.2)',
-    justifyContent: 'flex-end',
-    alignItems: 'flex-end',
-    paddingBottom: 70,
-    paddingRight: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   dropdown: {
     backgroundColor: 'white',
