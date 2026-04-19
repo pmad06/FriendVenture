@@ -103,7 +103,14 @@ export default function TasksScreen() {
               type="date"
               min={new Date().toISOString().split('T')[0]}
               value={deadline ? deadline.toISOString().split('T')[0] : ''}
-              onChange={(e) => setDeadline(e.target.value ? new Date(e.target.value) : undefined)}
+              onChange={(e) => {
+                if (!e.target.value) {
+                  setDeadline(undefined);
+                  return;
+                }
+                const [year, month, day] = e.target.value.split('-').map(Number);
+                setDeadline(new Date(year, month - 1, day)); 
+              }}
               style={{
                 fontSize: 16,
                 paddingTop: 9,
