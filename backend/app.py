@@ -231,6 +231,65 @@ def remove_friend():
         db.close()
 
 
+# ── Pet: get ─────────────────────────────────────────────────────────────────
+
+@app.route("/api/pet", methods=["GET"])
+def get_pet():
+    user_id = get_current_user_id()
+    if not user_id:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    db = get_db()
+    try:
+        db.execute("INSERT OR IGNORE INTO pet_state (user_id) VALUES (?)", (user_id,))
+        db.commit()
+        row = db.execute("SELECT * FROM pet_state WHERE user_id = ?", (user_id,)).fetchone()
+        return jsonify(dict(row)), 200
+    finally:
+        db.close()
+
+
+# ── Pet: save ─────────────────────────────────────────────────────────────────
+
+@app.route("/api/pet", methods=["POST"])
+def save_pet():
+    user_id = get_current_user_id()
+    if not user_id:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    data = request.get_json() or {}
+    db = get_db()
+    try:
+        db.execute(
+            """
+            INSERT INTO pet_state (user_id, health, hunger, happiness, color, accessory, shirt, name)
+            VALUES (:user_id, :health, :hunger, :happiness, :color, :accessory, :shirt, :name)
+            ON CONFLICT(user_id) DO UPDATE SET
+                health    = excluded.health,
+                hunger    = excluded.hunger,
+                happiness = excluded.happiness,
+                color     = excluded.color,
+                accessory = excluded.accessory,
+                shirt     = excluded.shirt,
+                name      = excluded.name
+            """,
+            {
+                "user_id":   user_id,
+                "health":    data.get("health", 85),
+                "hunger":    data.get("hunger", 60),
+                "happiness": data.get("happiness", 72),
+                "color":     data.get("color", "classic"),
+                "accessory": data.get("accessory", "none"),
+                "shirt":     data.get("shirt", "none"),
+                "name":      data.get("name", "Pandy"),
+            },
+        )
+        db.commit()
+        return jsonify({"ok": True}), 200
+    finally:
+        db.close()
+
+
 # ── Signup ──────────────────────────────────────────────────────────────────
 
 @app.route("/api/auth/signup", methods=["POST"])
