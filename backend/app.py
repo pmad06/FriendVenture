@@ -422,6 +422,60 @@ def reset_password():
     finally:
         db.close()
 
+# ── Tasks ─────────────────────────────────────────────────────────────────────
+
+@app.route("/api/tasks", methods=["GET"])
+def get_tasks():
+    user_id = get_current_user_id()
+    if not user_id:
+        return jsonify({"error": "Unauthorized"}), 401
+    db = get_db()
+    try:
+        rows = db.execute(
+            "SELECT id, title, type, deadline FROM tasks WHERE user_id = ? ORDER BY deadline ASC",
+            (user_id,)
+        ).fetchall()
+        return jsonify([dict(r) for r in rows]), 200
+    finally:
+        db.close()
+
+
+@app.route("/api/tasks", methods=["POST"])
+def add_task():
+    user_id = get_current_user_id()
+    if not user_id:
+        return jsonify({"error": "Unauthorized"}), 401
+    data = request.get_json()
+    title = data.get("title", "").strip()
+    type_ = data.get("type")
+    deadline = data.get("deadline")
+    if not title or type_ not in ("task", "assignment", "exam"):
+        return jsonify({"error": "Invalid data"}), 400
+    db = get_db()
+    try:
+        cursor = db.execute(
+            "INSERT INTO tasks (user_id, title, type, deadline) VALUES (?, ?, ?, ?)",
+            (user_id, title, type_, deadline)
+        )
+        db.commit()
+        return jsonify({"id": cursor.lastrowid, "title": title, "type": type_, "deadline": deadline}), 201
+    finally:
+        db.close()
+
+
+@app.route("/api/tasks/<int:task_id>", methods=["DELETE"])
+def delete_task(task_id):
+    user_id = get_current_user_id()
+    if not user_id:
+        return jsonify({"error": "Unauthorized"}), 401
+    db = get_db()
+    try:
+        db.execute("DELETE FROM tasks WHERE id = ? AND user_id = ?", (task_id, user_id))
+        db.commit()
+        return jsonify({"ok": True}), 200
+    finally:
+        db.close()
+
 
 if __name__ == "__main__":
     init_db()
