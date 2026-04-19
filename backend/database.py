@@ -47,6 +47,20 @@ def init_db():
             UNIQUE(user_id, friend_id)
         )
     ''')
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS user_settings (
+            user_id INTEGER PRIMARY KEY,
+            push_notifications INTEGER NOT NULL DEFAULT 1,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    ''')
+    conn.execute('''
+        CREATE TABLE IF NOT EXISTS user_settings (
+            user_id INTEGER PRIMARY KEY,
+            push_notifications INTEGER NOT NULL DEFAULT 1,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    ''')
     conn.commit()
     conn.close()
     print("Database initialized.")
