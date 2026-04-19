@@ -15,7 +15,7 @@ type Task = {
   type: TaskType;
   deadline?: Date;
   completed: boolean;
-  penalized: boolean; // true once we've already docked stats for this task
+  penalized: boolean; 
 };
 
 export default function TasksScreen() {
@@ -27,16 +27,16 @@ export default function TasksScreen() {
   const [inputText, setInputText] = useState('');
   const [deadline, setDeadline] = useState<Date | undefined>(undefined);
 
-  // Keep a ref so the interval always sees fresh tasks
   const tasksRef = useRef(tasks);
   useEffect(() => { tasksRef.current = tasks; }, [tasks]);
 
-  // ── Overdue checker: runs once per minute ──────────────────────────────────
+  //used to check if user missed the deadline for their assignments
   useEffect(() => {
     const check = () => {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
+      //updates pet status if user failed to finish their assignment on time
       setTasks(prev => {
         let changed = false;
         const next = prev.map(task => {
@@ -44,7 +44,7 @@ export default function TasksScreen() {
           const due = new Date(task.deadline);
           due.setHours(0, 0, 0, 0);
           if (due <= today) {
-            onMissed(task.type);   // apply penalty
+            onMissed(task.type);   
             changed = true;
             return { ...task, penalized: true };
           }
@@ -54,23 +54,24 @@ export default function TasksScreen() {
       });
     };
 
-    check(); // run immediately on mount
+    check(); 
     const interval = setInterval(check, 60_000);
     return () => clearInterval(interval);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []); 
 
-  //Countdown label
+  //calculates how many days are left until the assignment is due 
   const getCountdown = (deadline: Date) => {
     const now = new Date();
     now.setHours(0, 0, 0, 0);
     const diff = deadline.getTime() - now.getTime();
     const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+    //styling associated with when the assignment is due
     if (days < 0)  return { label: 'Overdue',     color: '#e05252' };
     if (days === 0) return { label: 'Due today',   color: '#e09a52' };
     return             { label: `${days} day${days !== 1 ? 's' : ''} left`, color: '#000' };
   };
 
-  //Add task 
+  //user can add their task 
   const addTask = (type: TaskType) => {
     if (inputText.trim() === '') return;
     const newTask: Task = {
@@ -86,7 +87,8 @@ export default function TasksScreen() {
     setDeadline(undefined);
   };
 
-  //Toggle completion
+  //checkbox so users can actually say if they completed their assignments or tasks
+  //pet status and health changes based on what the user says
   const toggleComplete = (id: string) => {
     setTasks(prev => prev.map(task => {
       if (task.id !== id) return task;
@@ -106,7 +108,7 @@ export default function TasksScreen() {
     web: { paddingTop: Spacing.six, paddingBottom: Spacing.four },
   });
 
-  //Render task list
+  //users can associate their to do item with task assignment or exam 
   const renderTaskList = (type: TaskType) => {
     const filtered = tasks.filter(t => t.type === type);
     if (filtered.length === 0) {
@@ -118,7 +120,7 @@ export default function TasksScreen() {
       return (
         <View key={task.id} style={[styles.taskItem, task.completed && styles.taskCompleted]}>
           <View style={styles.taskRow}>
-            {/* Checkbox */}
+            {/* Checkbox for the user */}
             <Pressable
               onPress={() => toggleComplete(task.id)}
               style={[styles.checkbox, task.completed && styles.checkboxChecked]}>
@@ -126,6 +128,7 @@ export default function TasksScreen() {
             </Pressable>
 
             <View style={{ flex: 1 }}>
+              {/* strikes through name of task because user marked it as complete */}
               <ThemedText style={task.completed ? styles.taskTitleDone : undefined}>
                 {task.title}
               </ThemedText>
@@ -137,9 +140,10 @@ export default function TasksScreen() {
                   <ThemedText type="small" style={[styles.countdown, { color: countdown.color }]}>
                     {countdown.label}
                   </ThemedText>
+                  {/* pet status got hit because user missed deadline*/}
                   {isOverdue && (
                     <ThemedText type="small" style={styles.penaltyBadge}>
-                      📉 stats hit
+                      pet health hit
                     </ThemedText>
                   )}
                 </View>
@@ -161,6 +165,7 @@ export default function TasksScreen() {
         <View style={styles.titleContainer}>
           <ThemedText type="subtitle" style={{ fontSize: 28, color: '#0F2B3A' }}>To-Do List</ThemedText>
 
+          {/* input section for users like their text field and the date picker for deadline */}
           <View style={styles.inputWrapper}>
             <TextInput
               style={[styles.input, { color: '#000' }]}
@@ -189,6 +194,7 @@ export default function TasksScreen() {
                 outline: 'none',
               }}
             />
+            {/* buttons to add to either task assignment or exam */}
             <View style={styles.buttonRow}>
               <Pressable style={styles.addButton} onPress={() => addTask('task')}>
                 <ThemedText type="small" style={{ color: '#000' }}>+ Task</ThemedText>
@@ -203,18 +209,19 @@ export default function TasksScreen() {
           </View>
         </View>
 
+        {/* used collapsible from the expo template */}
         <View style={styles.sectionsWrapper}>
           <View style={{ backgroundColor: '#9bd0ec' }}>
             <Collapsible title={`Tasks (${tasks.filter(t => t.type === 'task').length})`}>
               {renderTaskList('task')}
             </Collapsible>
           </View>
-          <View style={{ backgroundColor: '#C9ECF6' }}>
+          <View style={{ backgroundColor: '#9bd0ec' }}>
             <Collapsible title={`Assignments (${tasks.filter(t => t.type === 'assignment').length})`}>
               {renderTaskList('assignment')}
             </Collapsible>
           </View>
-          <View style={{ backgroundColor: '#C9ECF6' }}>
+          <View style={{ backgroundColor: '#9bd0ec' }}>
             <Collapsible title={`Exams (${tasks.filter(t => t.type === 'exam').length})`}>
               {renderTaskList('exam')}
             </Collapsible>
