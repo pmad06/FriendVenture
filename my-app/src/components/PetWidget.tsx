@@ -16,13 +16,6 @@ type AccessoryKey = 'none' | 'bow' | 'tophat' | 'crown' | 'headphones';
 type ShirtKey     = 'none' | 'stripes' | 'hearts' | 'stars' | 'plaid';
 type ColorKey     = 'classic' | 'pink' | 'blue' | 'lavender' | 'mint';
 
-interface Appearance {
-  name: string;
-  accessory: AccessoryKey;
-  shirt: ShirtKey;
-  color: ColorKey;
-}
-
 //Pixel Art Panda
 
 const PANDA_COLORS: Record<ColorKey, { body: string; accent: string }> = {
@@ -233,18 +226,11 @@ function getOverallColor(health: number): string {
 //Main PetWidget
 
 export default function PetWidget() {
-  const { stats } = usePet();
+  const { stats, appearance, setAppearance } = usePet();
   const [modalVisible, setModalVisible] = useState(false);
   const [activeTab, setActiveTab]       = useState<'customize' | 'health'>('customize');
-  const [appearance, setAppearance]     = useState<Appearance>({
-    name:      'Pandy',
-    accessory: 'none',
-    shirt:     'none',
-    color:     'classic',
-  });
 
-  const update = (patch: Partial<Appearance>) =>
-    setAppearance(prev => ({ ...prev, ...patch }));
+  const update = (patch: Partial<typeof appearance>) => setAppearance(patch);
 
   return (
     <>

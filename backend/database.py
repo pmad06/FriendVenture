@@ -24,6 +24,19 @@ def init_db():
         )
     ''')
     conn.execute('''
+        CREATE TABLE IF NOT EXISTS pet_state (
+            user_id   INTEGER PRIMARY KEY,
+            health    INTEGER NOT NULL DEFAULT 85,
+            hunger    INTEGER NOT NULL DEFAULT 60,
+            happiness INTEGER NOT NULL DEFAULT 72,
+            color     TEXT NOT NULL DEFAULT 'classic',
+            accessory TEXT NOT NULL DEFAULT 'none',
+            shirt     TEXT NOT NULL DEFAULT 'none',
+            name      TEXT NOT NULL DEFAULT 'Pandy',
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    ''')
+    conn.execute('''
         CREATE TABLE IF NOT EXISTS friendships (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id INTEGER NOT NULL,
