@@ -24,12 +24,7 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
-    # migrate existing databases that don't have the role column yet
-    try:
-        conn.execute("ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'member'")
-        conn.commit()
-    except Exception:
-        pass
+
     conn.execute('''
         CREATE TABLE IF NOT EXISTS pet_state (
             user_id   INTEGER PRIMARY KEY,
