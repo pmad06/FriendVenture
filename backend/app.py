@@ -1,6 +1,6 @@
 import datetime
 import os
-
+from functools import wraps
 import bcrypt
 import jwt
 from database import get_db, init_db
@@ -14,29 +14,46 @@ SECRET_KEY = os.environ.get("JWT_SECRET", "friendventure-secret-change-in-prod")
 RESET_SECRET = os.environ.get("RESET_SECRET", "friendventure-reset-secret-change-in-prod")
 
 
-def generate_auth_token(user_id: int, username: str) -> str:
+def generate_auth_token(user_id: int, username: str, role: str) -> str:
     payload = {
         "user_id": user_id,
         "username": username,
+        "role": role,
         "exp": datetime.datetime.utcnow() + datetime.timedelta(days=7),
     }
     return jwt.encode(payload, SECRET_KEY, algorithm="HS256")
 
-# reads the jwt from the Authorization header and returns the user_id inside it
-def get_current_user_id():
+## will return current user info if a valid token is provided, otherwise None. used by the @require_admin decorator and route handlers to get the logged-in user's id and role.
+def get_current_user():
     auth_header = request.headers.get("Authorization", "")
-    # header must start with "Bearer " - reject anything else
     if not auth_header.startswith("Bearer "):
         return None
     token = auth_header.split(" ")[1]
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-        return payload["user_id"]
+        return {"id": payload["user_id"], "role": payload.get("role", "member")}
     except jwt.InvalidTokenError:
         return None
 
+## helper to get just the user ID of the logged-in user, since that's needed in many places
+def get_current_user_id():
+    user = get_current_user()
+    return user["id"] if user else None
 
-# returns the logged-in user's profile + notification setting
+## ensures members can't access admin-only routes
+def require_admin(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        user = get_current_user()
+        if not user:
+            return jsonify({"error": "Unauthorized"}), 401
+        if user["role"] != "admin":
+            return jsonify({"error": "Forbidden"}), 403
+        return f(*args, **kwargs)
+    return decorated
+
+
+# returns the logged-in user's profile + role + notification setting
 @app.route("/api/user/profile", methods=["GET"])
 def get_profile():
     user_id = get_current_user_id()
@@ -45,15 +62,14 @@ def get_profile():
 
     db = get_db()
     try:
-        user = db.execute("SELECT first_name, last_name, username FROM users WHERE id = ?", (user_id,)).fetchone()
+        user = db.execute("SELECT first_name, last_name, username, role FROM users WHERE id = ?", (user_id,)).fetchone()
         if not user:
             return jsonify({"error": "User not found"}), 404
-        
+
         settings = db.execute("SELECT push_notifications FROM user_settings WHERE user_id = ?", (user_id,)).fetchone()
-        
-        # default to true if user has no row in user_settings yet
+
         push_notifications = bool(settings["push_notifications"]) if settings else True
-        return jsonify({"firstName": user["first_name"], "lastName": user["last_name"], "username": user["username"], "pushNotifications": push_notifications}), 200
+        return jsonify({"firstName": user["first_name"], "lastName": user["last_name"], "username": user["username"], "role": user["role"], "pushNotifications": push_notifications}), 200
     finally:
         db.close()
 
@@ -329,17 +345,18 @@ def signup():
         return jsonify({"error": "Password must be at least 6 characters"}), 400
 
     password_hash = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+    role = "admin" if email.endswith("@friendventure.com") else "member"
 
     db = get_db()
     try:
         db.execute(
-            "INSERT INTO users (first_name, last_name, email, username, password_hash) VALUES (?, ?, ?, ?, ?)",
-            (first_name, last_name, email, username, password_hash),
+            "INSERT INTO users (first_name, last_name, email, username, password_hash, role) VALUES (?, ?, ?, ?, ?, ?)",
+            (first_name, last_name, email, username, password_hash, role),
         )
         db.commit()
-        user = db.execute("SELECT id FROM users WHERE username = ?", (username,)).fetchone()
-        token = generate_auth_token(user["id"], username)
-        return jsonify({"token": token, "username": username, "firstName": first_name}), 201
+        user = db.execute("SELECT id, role FROM users WHERE username = ?", (username,)).fetchone()
+        token = generate_auth_token(user["id"], username, user["role"])
+        return jsonify({"token": token, "username": username, "firstName": first_name, "role": user["role"]}), 201
     except Exception as e:
         err = str(e)
         if "users.email" in err:
@@ -372,8 +389,8 @@ def login():
         if not user or not bcrypt.checkpw(password.encode("utf-8"), user["password_hash"].encode("utf-8")):
             return jsonify({"error": "Invalid username/email or password"}), 401
 
-        token = generate_auth_token(user["id"], user["username"])
-        return jsonify({"token": token, "username": user["username"], "firstName": user["first_name"]}), 200
+        token = generate_auth_token(user["id"], user["username"], user["role"])
+        return jsonify({"token": token, "username": user["username"], "firstName": user["first_name"], "role": user["role"]}), 200
     finally:
         db.close()
 
@@ -495,6 +512,106 @@ def delete_task(task_id):
         return jsonify({"ok": True}), 200
     finally:
         db.close()
+
+# ── Admin ─────────────────────────────────────────────────────────────────────
+# will list users info, including name, username, email, role, and registration date. 
+@app.route("/api/admin/users", methods=["GET"])
+@require_admin
+def admin_list_users():
+    db = get_db()
+    try:
+        rows = db.execute(
+            "SELECT id, first_name, last_name, username, email, role, created_at FROM users ORDER BY created_at ASC"
+        ).fetchall()
+        return jsonify([dict(r) for r in rows]), 200
+    finally:
+        db.close()
+
+
+# admin can create a new user with any role
+@app.route("/api/admin/users", methods=["POST"])
+@require_admin
+def admin_create_user():
+    data = request.get_json()
+    required = ["firstName", "lastName", "email", "username", "password", "role"]
+    if not data or not all(k in data for k in required):
+        return jsonify({"error": "All fields are required"}), 400
+
+    first_name = data["firstName"].strip()
+    last_name  = data["lastName"].strip()
+    email      = data["email"].strip().lower()
+    username   = data["username"].strip().lower()
+    password   = data["password"]
+    role       = data["role"]
+
+    if role not in ("admin", "member"):
+        return jsonify({"error": "Role must be 'admin' or 'member'"}), 400
+    if len(password) < 6:
+        return jsonify({"error": "Password must be at least 6 characters"}), 400
+
+    password_hash = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+    db = get_db()
+    try:
+        cursor = db.execute(
+            "INSERT INTO users (first_name, last_name, email, username, password_hash, role) VALUES (?, ?, ?, ?, ?, ?)",
+            (first_name, last_name, email, username, password_hash, role),
+        )
+        db.commit()
+        new_user = db.execute(
+            "SELECT id, first_name, last_name, username, email, role, created_at FROM users WHERE id = ?",
+            (cursor.lastrowid,)
+        ).fetchone()
+        return jsonify(dict(new_user)), 201
+    except Exception as e:
+        err = str(e)
+        if "users.email" in err:
+            return jsonify({"error": "Email is already in use"}), 409
+        if "users.username" in err:
+            return jsonify({"error": "Username is already taken"}), 409
+        return jsonify({"error": "Could not create user"}), 500
+    finally:
+        db.close()
+
+
+# admin can delete a user 
+@app.route("/api/admin/users/<int:target_id>", methods=["DELETE"])
+@require_admin
+def admin_delete_user(target_id):
+    current = get_current_user()
+    if current["id"] == target_id:
+        return jsonify({"error": "You cannot delete your own account"}), 400
+    db = get_db()
+    try:
+        db.execute("DELETE FROM friendships WHERE user_id = ? OR friend_id = ?", (target_id, target_id))
+        db.execute("DELETE FROM tasks WHERE user_id = ?", (target_id,))
+        db.execute("DELETE FROM pet_state WHERE user_id = ?", (target_id,))
+        db.execute("DELETE FROM user_settings WHERE user_id = ?", (target_id,))
+        db.execute("DELETE FROM users WHERE id = ?", (target_id,))
+        db.commit()
+        return jsonify({"ok": True}), 200
+    finally:
+        db.close()
+
+
+# admin can change a user's role between "admin" and "member"
+@app.route("/api/admin/users/<int:target_id>/role", methods=["PUT"])
+@require_admin
+def admin_change_role(target_id):
+    current = get_current_user()
+    if current["id"] == target_id:
+        return jsonify({"error": "You cannot change your own role"}), 400
+    data = request.get_json()
+    new_role = data.get("role") if data else None
+    if new_role not in ("admin", "member"):
+        return jsonify({"error": "Role must be 'admin' or 'member'"}), 400
+    db = get_db()
+    try:
+        db.execute("UPDATE users SET role = ? WHERE id = ?", (new_role, target_id))
+        db.commit()
+        return jsonify({"ok": True, "role": new_role}), 200
+    finally:
+        db.close()
+
 
 if __name__ == "__main__":
     init_db()
