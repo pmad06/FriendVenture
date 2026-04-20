@@ -6,6 +6,7 @@ const API = 'http://localhost:5000';
 
 //Types
 
+//added hobby
 export type TaskType = 'challenge' | 'assignment' | 'exam' | 'hobby';
 
 export interface PetStats {

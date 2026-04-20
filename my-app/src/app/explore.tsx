@@ -208,6 +208,7 @@ export default function TasksScreen() {
                 <ThemedText type="small" style={{ color: '#000' }}>+ Exam</ThemedText>
                 <ThemedText type="small" style={{ color: '#000', fontSize: 10}}> Prepare for your upcoming exam! Check out a new lecture hall!</ThemedText>
               </Pressable>
+              {/* added hobby button */}
               <Pressable style={styles.addButton} onPress={() => addTask('hobby')}>
                 <ThemedText type="small" style={{ color: '#000' }}>+ Personal Hobbies</ThemedText>
                 <ThemedText type="small" style={{ color: '#000', fontSize: 10}}> Try a new recipe, learn a musical instrument, or read a book!</ThemedText>
