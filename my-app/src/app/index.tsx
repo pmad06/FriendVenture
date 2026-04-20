@@ -7,7 +7,7 @@ import { usePet } from '@/context/pet-context';
 
 const API = 'http://localhost:5000';
 
-type User = { id: number; username: string; name: string };
+type User = { id: number; username: string; name: string; health?: number };
 
 type LeaderboardEntry = {
   id: number;
@@ -62,7 +62,7 @@ export default function HomeScreen() {
     const friendEntries: LeaderboardEntry[] = friends.map(f => ({
       id: f.id,
       name: f.name,
-      health: 50 + (f.id % 40), // placeholder — replace with real API data later
+      health: f.health ?? 50,
       rank: 0,
       isMe: false,
     }));
