@@ -128,6 +128,7 @@ export default function SettingsScreen() {
                     <ThemedView type="backgroundElement" style={styles.inputWrapper}>
                         <View style={[styles.taskItem, styles.rowBetween]}>
                             <ThemedText>Push Notifications</ThemedText>
+                            <Switch onValueChange={async (newValue) => {
                                 setPushNotifs(newValue);
                                 await fetch(`${API_BASE_URL}/api/user/notifications`, {
                                     method: 'PUT',
