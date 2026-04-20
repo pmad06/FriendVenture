@@ -204,9 +204,11 @@ def get_friends():
     try:
         rows = db.execute(
             """
-            SELECT u.id, u.username, u.first_name || ' ' || u.last_name AS name
+            SELECT u.id, u.username, u.first_name || ' ' || u.last_name AS name,
+                   COALESCE(p.health, 85) AS health
             FROM friendships f
             JOIN users u ON u.id = f.friend_id
+            LEFT JOIN pet_state p ON p.user_id = f.friend_id
             WHERE f.user_id = ?
             """,
             (user_id,),
@@ -436,8 +438,6 @@ def reset_password():
     finally:
         db.close()
 
-<<<<<<< HEAD
-=======
 # ── Tasks ─────────────────────────────────────────────────────────────────────
 
 @app.route("/api/tasks", methods=["GET"])
@@ -491,8 +491,6 @@ def delete_task(task_id):
         return jsonify({"ok": True}), 200
     finally:
         db.close()
-
->>>>>>> 5760ad70817d4f10c7696fd40d27912216326bb1
 
 if __name__ == "__main__":
     init_db()
