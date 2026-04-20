@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 
 import { API_BASE_URL } from '@/constants/api';
 import { useAuth } from '@/context/auth-context';
@@ -15,6 +15,8 @@ interface User {
   created_at: string;
 }
 
+const EMPTY_FORM = { firstName: '', lastName: '', username: '', email: '', password: '', role: 'member' as 'admin' | 'member' };
+
 export default function AdminPanel() {
   const { token, role } = useAuth();
   const router = useRouter();
@@ -22,7 +24,13 @@ export default function AdminPanel() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // redirect non-admins away from this screen 
+  //form state for creating a new user
+  const [form, setForm] = useState(EMPTY_FORM);
+  const [formError, setFormError] = useState('');
+  const [formLoading, setFormLoading] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+
+  // redirect non-admins away from this screen
   useEffect(() => {
     if (role !== 'admin') {
       router.replace('/');
@@ -49,6 +57,40 @@ export default function AdminPanel() {
       setError('Could not connect to server.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // submits the create user form and adds the new user to the list
+  const handleCreateUser = async () => {
+    setFormError('');
+    if (!form.firstName.trim() || !form.lastName.trim() || !form.username.trim() || !form.email.trim() || !form.password) {
+      setFormError('All fields are required.');
+      return;
+    }
+    if (form.password.length < 6) {
+      setFormError('Password must be at least 6 characters.');
+      return;
+    }
+    setFormLoading(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/admin/users`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setFormError(data.error ?? 'Could not create user.');
+        return;
+      }
+      //add the newly created user to the top of the list and reset the form
+      setUsers(prev => [...prev, data]);
+      setForm(EMPTY_FORM);
+      setShowForm(false);
+    } catch {
+      setFormError('Could not connect to server.');
+    } finally {
+      setFormLoading(false);
     }
   };
 
@@ -121,6 +163,86 @@ export default function AdminPanel() {
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
+      {/* button to toggle the create user form */}
+      <Pressable style={styles.createBtn} onPress={() => { setShowForm(v => !v); setFormError(''); }}>
+        <Text style={styles.createBtnText}>{showForm ? 'Cancel' : '+ Create User'}</Text>
+      </Pressable>
+
+      {/* create user form — only visible when the admin clicks the button above */}
+      {showForm && (
+        <View style={styles.formCard}>
+          <Text style={styles.formTitle}>New User</Text>
+
+          {formError ? <Text style={styles.error}>{formError}</Text> : null}
+
+          <View style={styles.row}>
+            <TextInput
+              style={[styles.input, styles.halfInput]}
+              placeholder="First Name"
+              placeholderTextColor="#555"
+              value={form.firstName}
+              onChangeText={v => setForm(f => ({ ...f, firstName: v }))}
+              autoCapitalize="words"
+            />
+            <TextInput
+              style={[styles.input, styles.halfInput]}
+              placeholder="Last Name"
+              placeholderTextColor="#555"
+              value={form.lastName}
+              onChangeText={v => setForm(f => ({ ...f, lastName: v }))}
+              autoCapitalize="words"
+            />
+          </View>
+
+          <TextInput
+            style={styles.input}
+            placeholder="Username"
+            placeholderTextColor="#555"
+            value={form.username}
+            onChangeText={v => setForm(f => ({ ...f, username: v }))}
+            autoCapitalize="none"
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            placeholderTextColor="#555"
+            value={form.email}
+            onChangeText={v => setForm(f => ({ ...f, email: v }))}
+            autoCapitalize="none"
+            keyboardType="email-address"
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Password (min 6 characters)"
+            placeholderTextColor="#555"
+            value={form.password}
+            onChangeText={v => setForm(f => ({ ...f, password: v }))}
+            secureTextEntry
+          />
+
+          {/* role picker — admin toggles between member and admin before saving */}
+          <View style={styles.roleRow}>
+            <Text style={styles.roleLabel}>Role:</Text>
+            <Pressable
+              style={[styles.roleChip, form.role === 'member' && styles.roleChipActive]}
+              onPress={() => setForm(f => ({ ...f, role: 'member' }))}>
+              <Text style={styles.roleChipText}>Member</Text>
+            </Pressable>
+            <Pressable
+              style={[styles.roleChip, form.role === 'admin' && styles.roleChipActive]}
+              onPress={() => setForm(f => ({ ...f, role: 'admin' }))}>
+              <Text style={styles.roleChipText}>Admin</Text>
+            </Pressable>
+          </View>
+
+          <Pressable style={styles.submitBtn} onPress={handleCreateUser} disabled={formLoading}>
+            {formLoading
+              ? <ActivityIndicator color="#fff" />
+              : <Text style={styles.submitBtnText}>Create User</Text>}
+          </Pressable>
+        </View>
+      )}
+
       {/* one card per user showing their info, role badge, and action buttons */}
       {users.map(user => (
         <View key={user.id} style={styles.card}>
@@ -188,6 +310,85 @@ const styles = StyleSheet.create({
   error: {
     color: 'hsl(0, 80%, 55%)',
     marginBottom: 12,
+  },
+  createBtn: {
+    backgroundColor: '#0F2B3A',
+    borderRadius: 10,
+    paddingVertical: 10,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  createBtnText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 15,
+  },
+  formCard: {
+    backgroundColor: '#C9ECF6',
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 16,
+    gap: 8,
+  },
+  formTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#0F2B3A',
+    marginBottom: 4,
+  },
+  row: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  input: {
+    backgroundColor: '#9bd0ec',
+    borderWidth: 1,
+    borderColor: '#0F2B3A',
+    borderRadius: 8,
+    padding: 10,
+    fontSize: 14,
+    color: '#0F2B3A',
+    flex: 1,
+  },
+  halfInput: {
+    flex: 1,
+  },
+  roleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 4,
+  },
+  roleLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#0F2B3A',
+  },
+  roleChip: {
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    backgroundColor: '#9bd0ec',
+  },
+  roleChipActive: {
+    backgroundColor: '#0F2B3A',
+  },
+  roleChipText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  submitBtn: {
+    backgroundColor: '#0F2B3A',
+    borderRadius: 8,
+    paddingVertical: 10,
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  submitBtnText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 14,
   },
   card: {
     backgroundColor: '#C9ECF6',
