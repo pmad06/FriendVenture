@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAuth } from '@/context/auth-context';
 
-const NAV_ITEMS = [
+const BASE_NAV_ITEMS = [
   { label: 'Home',     path: '/'         },
   { label: 'Tasks',    path: '/explore'  },
   { label: 'Account',  path: '/account'  },
@@ -17,7 +17,11 @@ const NAV_ITEMS = [
 export function NavBar() {
   const [isOpen, setIsOpen]               = useState(false);
   const [dropdownVisible, setDropdown]    = useState(false);
-  const { isAuthenticated, username, logout } = useAuth();
+  const { isAuthenticated, username, role, logout } = useAuth();
+
+  const NAV_ITEMS = role === 'admin'
+    ? [...BASE_NAV_ITEMS, { label: 'Admin', path: '/admin' }]
+    : BASE_NAV_ITEMS;
   const router   = useRouter();
   const pathname = usePathname();
   const insets   = useSafeAreaInsets();

@@ -54,7 +54,7 @@ export default function CreateAccount() {
         setError(data.error ?? 'Could not create account.');
         return;
       }
-      await login(data.token, data.username);
+      await login(data.token, data.username, data.role ?? 'member');
       router.replace('/');
     } catch {
       setError('Could not connect to server. Check your network.');

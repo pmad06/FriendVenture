@@ -22,6 +22,7 @@ export function AppShell({ colorScheme }: { colorScheme: string | null | undefin
           <Tabs.Screen name="explore" options={{ title: 'Tasks' }} />
           <Tabs.Screen name="account" options={{ title: 'Account' }} />
           <Tabs.Screen name="settings" options={{ title: 'Settings' }} />
+          <Tabs.Screen name="admin" options={noTab} />
           <Tabs.Screen name="login" options={noTab} />
           <Tabs.Screen name="create-account" options={noTab} />
           <Tabs.Screen name="forgot-password" options={noTab} />
