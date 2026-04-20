@@ -22,8 +22,10 @@ def generate_auth_token(user_id: int, username: str) -> str:
     }
     return jwt.encode(payload, SECRET_KEY, algorithm="HS256")
 
+# reads the jwt from the Authorization header and returns the user_id inside it
 def get_current_user_id():
     auth_header = request.headers.get("Authorization", "")
+    # header must start with "Bearer " - reject anything else
     if not auth_header.startswith("Bearer "):
         return None
     token = auth_header.split(" ")[1]
@@ -33,6 +35,8 @@ def get_current_user_id():
     except jwt.InvalidTokenError:
         return None
 
+
+# returns the logged-in user's profile + notification setting
 @app.route("/api/user/profile", methods=["GET"])
 def get_profile():
     user_id = get_current_user_id()
@@ -43,11 +47,13 @@ def get_profile():
     try:
         user = db.execute("SELECT first_name, last_name, username FROM users WHERE id = ?", (user_id,)).fetchone()
         settings = db.execute("SELECT push_notifications FROM user_settings WHERE user_id = ?", (user_id,)).fetchone()
+        # default to true if user has no row in user_settings yet
         push_notifications = bool(settings["push_notifications"]) if settings else True
         return jsonify({"firstName": user["first_name"], "lastName": user["last_name"], "username": user["username"], "pushNotifications": push_notifications}), 200
     finally:
         db.close()
 
+# updates first name, last name, and username for the logged-in user
 @app.route("/api/user/profile", methods=["PUT"])
 def update_profile():
     user_id = get_current_user_id()
@@ -57,8 +63,10 @@ def update_profile():
     data = request.get_json()
     first_name = data.get("firstName", "").strip()
     last_name = data.get("lastName", "").strip()
+    # force lowercase so usernames are case-insensitive
     username = data.get("username", "").strip().lower()
 
+    # all three fields are required
     if not first_name or not last_name or not username:
         return jsonify({"error": "First name, last name, and username are required"}), 400
 
@@ -71,12 +79,14 @@ def update_profile():
         db.commit()
         return jsonify({"message": "Profile updated!"}), 200
     except Exception as e:
+        # username has a unique constraint 
         if "users.username" in str(e):
             return jsonify({"error": "Username is already taken"}), 409
         return jsonify({"error": "Could not update profile"}), 500
     finally:
         db.close()
 
+# changes password - requires the current password to prevent unauthorized changes
 @app.route("/api/user/password", methods=["PUT"])
 def change_password():
     user_id = get_current_user_id()
@@ -93,9 +103,11 @@ def change_password():
     db = get_db()
     try:
         user = db.execute("SELECT password_hash FROM users WHERE id = ?", (user_id,)).fetchone()
+        # verify current password before allowing the change
         if not user or not bcrypt.checkpw(current_password.encode("utf-8"), user["password_hash"].encode("utf-8")):
             return jsonify({"error": "Current password is incorrect"}), 401
 
+        # NEVER store plain text, always hash before saving
         new_hash = bcrypt.hashpw(new_password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
         db.execute("UPDATE users SET password_hash = ? WHERE id = ?", (new_hash, user_id))
         db.commit()
@@ -103,6 +115,7 @@ def change_password():
     finally:
         db.close()
 
+# saves push notification preference for the logged-in user
 @app.route("/api/user/notifications", methods=["PUT"])
 def update_notifications():
     user_id = get_current_user_id()
@@ -114,6 +127,7 @@ def update_notifications():
 
     db = get_db()
     try:
+        # insert if no row exists, otherwise update avoids duplicate key errors
         db.execute("INSERT INTO user_settings (user_id, push_notifications) VALUES (?, ?) ON CONFLICT(user_id) DO UPDATE SET push_notifications = ?", (user_id, enabled, enabled))
         db.commit()
         return jsonify({"message": "Settings saved"}), 200
