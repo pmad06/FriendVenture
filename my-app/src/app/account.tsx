@@ -37,12 +37,12 @@ export default function AccountScreen() {
 const styles = StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.2)',
+    backgroundColor: 'rgba(15,43,58,0.5)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   dropdown: {
-    backgroundColor: 'white',
+    backgroundColor: '#C9ECF6',
     borderRadius: 12,
     paddingVertical: 8,
     paddingHorizontal: 4,
@@ -55,22 +55,28 @@ const styles = StyleSheet.create({
   },
   username: {
     fontSize: 13,
-    color: 'hsl(0, 0%, 40%)',
+    color: '#0F2B3A',
+    fontWeight: '600',
     paddingHorizontal: 16,
     paddingVertical: 8,
   },
   divider: {
     height: 1,
-    backgroundColor: 'hsl(0, 0%, 90%)',
+    backgroundColor: '#9bd0ec',
     marginHorizontal: 8,
   },
   logoutBtn: {
+    backgroundColor: '#0F2B3A',
+    borderRadius: 10,
+    marginHorizontal: 8,
+    marginTop: 8,
     paddingHorizontal: 16,
     paddingVertical: 10,
+    alignItems: 'center',
   },
   logoutText: {
     fontSize: 15,
-    color: 'hsl(247, 83%, 60%)',
-    fontWeight: '500',
+    color: '#fff',
+    fontWeight: '600',
   },
 });
