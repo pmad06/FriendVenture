@@ -23,18 +23,27 @@ export default function SettingsScreen() {
     // fetch profile on mount - [token] so it retries once the token loads from storage
     useEffect(() => {
         // don't fetch if not logged in yet
-        if (!token) return;
-        fetch(`${API_BASE_URL}/api/user/profile`, {
-            headers: { Authorization: `Bearer ${token}` }
-        })
-        .then(r => r.json())
-        .then(data => {
-            // ?? '' prevents setting null/undefined into a text input
+        const loadProfile = async () => {
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/user/profile`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                alert(data.error || 'Failed to load profile');
+                return;
+            }
             setFirstName(data.firstName ?? '');
             setLastName(data.lastName ?? '');
             setUsername(data.username ?? '');
-            setPushNotifs(data.pushNotifications);
-        });
+            setPushNotifs(data.pushNotifications ?? true);
+        } catch (error) {
+            console.error('Profile fetch failed:', error);
+            alert('Could not connect to the server.');
+        }
+    };
+
+    loadProfile();
     }, [token]);
 
     // saves name + username to the backend
