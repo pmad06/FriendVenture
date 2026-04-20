@@ -60,12 +60,14 @@ export function NavBar() {
         <Animated.View entering={FadeIn.duration(200)} style={styles.navList}>
           {NAV_ITEMS.map(item => {
             const active = pathname === item.path || (item.path === '/' && pathname === '/index');
+            const label = item.path === '/account'
+              ? (isAuthenticated ? 'Log Out' : 'Account') : item.label;
             return (
               <Pressable
                 key={item.path}
                 style={({ pressed }) => [styles.navItem, active && styles.navItemActive, pressed && styles.navItemPressed]}
                 onPress={() => handleNavPress(item.path)}>
-                <Text style={[styles.navLabel, active && styles.navLabelActive]}>{item.label}</Text>
+                <Text style={[styles.navLabel, active && styles.navLabelActive]}>{label}</Text>
               </Pressable>
             );
           })}
