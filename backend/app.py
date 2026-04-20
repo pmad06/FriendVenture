@@ -526,7 +526,53 @@ def admin_list_users():
     finally:
         db.close()
 
-# admin can delete an user
+
+# admin can create a new user with any role
+@app.route("/api/admin/users", methods=["POST"])
+@require_admin
+def admin_create_user():
+    data = request.get_json()
+    required = ["firstName", "lastName", "email", "username", "password", "role"]
+    if not data or not all(k in data for k in required):
+        return jsonify({"error": "All fields are required"}), 400
+
+    first_name = data["firstName"].strip()
+    last_name  = data["lastName"].strip()
+    email      = data["email"].strip().lower()
+    username   = data["username"].strip().lower()
+    password   = data["password"]
+    role       = data["role"]
+
+    if role not in ("admin", "member"):
+        return jsonify({"error": "Role must be 'admin' or 'member'"}), 400
+    if len(password) < 6:
+        return jsonify({"error": "Password must be at least 6 characters"}), 400
+
+    password_hash = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+    db = get_db()
+    try:
+        cursor = db.execute(
+            "INSERT INTO users (first_name, last_name, email, username, password_hash, role) VALUES (?, ?, ?, ?, ?, ?)",
+            (first_name, last_name, email, username, password_hash, role),
+        )
+        db.commit()
+        new_user = db.execute(
+            "SELECT id, first_name, last_name, username, email, role, created_at FROM users WHERE id = ?",
+            (cursor.lastrowid,)
+        ).fetchone()
+        return jsonify(dict(new_user)), 201
+    except Exception as e:
+        err = str(e)
+        if "users.email" in err:
+            return jsonify({"error": "Email is already in use"}), 409
+        if "users.username" in err:
+            return jsonify({"error": "Username is already taken"}), 409
+        return jsonify({"error": "Could not create user"}), 500
+    finally:
+        db.close()
+
+
+# admin can delete a user 
 @app.route("/api/admin/users/<int:target_id>", methods=["DELETE"])
 @require_admin
 def admin_delete_user(target_id):
@@ -545,7 +591,8 @@ def admin_delete_user(target_id):
     finally:
         db.close()
 
-# admin can change an user's role between "admin" and "member"
+
+# admin can change a user's role between "admin" and "member"
 @app.route("/api/admin/users/<int:target_id>/role", methods=["PUT"])
 @require_admin
 def admin_change_role(target_id):
