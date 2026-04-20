@@ -465,7 +465,7 @@ def add_task():
     title = data.get("title", "").strip()
     type_ = data.get("type")
     deadline = data.get("deadline")
-    if not title or type_ not in ("task", "assignment", "exam"):
+    if not title or type_ not in ("challenge", "assignment", "exam", "hobby"):
         return jsonify({"error": "Invalid data"}), 400
     db = get_db()
     try:
