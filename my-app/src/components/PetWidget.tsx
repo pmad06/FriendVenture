@@ -325,12 +325,10 @@ export default function PetWidget() {
 
                 <SectionHeader title="How it works" />
                 <View style={styles.tipsList}>
-                  <Text style={styles.tip}>Complete a task: small boost (+8 health, +5 hunger, +10 happiness)</Text>
-                  <Text style={styles.tip}>Complete an assignment: medium boost (+13 health, +8 hunger, +15 happiness)</Text>
-                  <Text style={styles.tip}>Complete an exam: big boost (+18 health, +12 hunger, +20 happiness)</Text>
-                  <Text style={styles.tip}>Missing a task: -12 health, -8 hunger, -15 happiness</Text>
-                  <Text style={styles.tip}>Missing an assignment: -18 health, -12 hunger, -20 happiness</Text>
-                  <Text style={styles.tip}>Missing an exam: -25 health, -18 hunger, -28 happiness</Text>
+                  <Text style={styles.tip}>Complete a challenge: +8 health, +5 hunger, +10 happiness</Text>
+                  <Text style={styles.tip}>Complete an assignment: +13 health, +8 hunger, +15 happiness</Text>
+                  <Text style={styles.tip}>Complete an exam: +18 health, +12 hunger, +20 happiness</Text>
+                  <Text style={styles.tip}>Complete a hobby: +5 health, +3 hunger, +12 happiness</Text>
                 </View>
               </>
             )}
