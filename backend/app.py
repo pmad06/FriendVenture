@@ -46,7 +46,11 @@ def get_profile():
     db = get_db()
     try:
         user = db.execute("SELECT first_name, last_name, username FROM users WHERE id = ?", (user_id,)).fetchone()
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+        
         settings = db.execute("SELECT push_notifications FROM user_settings WHERE user_id = ?", (user_id,)).fetchone()
+        
         # default to true if user has no row in user_settings yet
         push_notifications = bool(settings["push_notifications"]) if settings else True
         return jsonify({"firstName": user["first_name"], "lastName": user["last_name"], "username": user["username"], "pushNotifications": push_notifications}), 200
