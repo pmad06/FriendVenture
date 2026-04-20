@@ -6,7 +6,7 @@ const API = 'http://localhost:5000';
 
 //Types
 
-export type TaskType = 'task' | 'assignment' | 'exam';
+export type TaskType = 'challenge' | 'assignment' | 'exam' | 'hobby';
 
 export interface PetStats {
   health: number;
@@ -32,15 +32,17 @@ interface PetContextValue {
 //Weights
 
 const REWARDS: Record<TaskType, PetStats> = {
-  task:       { health: 8,  hunger: 5,  happiness: 10 },
+  challenge:       { health: 8,  hunger: 5,  happiness: 10 },
   assignment: { health: 13, hunger: 8,  happiness: 15 },
   exam:       { health: 18, hunger: 12, happiness: 20 },
+  hobby:        { health: 5,  hunger: 3,  happiness: 12 },
 };
 
 const PENALTIES: Record<TaskType, PetStats> = {
-  task:       { health: -12, hunger: -8,  happiness: -15 },
+  challenge:       { health: -12, hunger: -8,  happiness: -15 },
   assignment: { health: -18, hunger: -12, happiness: -20 },
   exam:       { health: -25, hunger: -18, happiness: -28 },
+  hobby:        { health: -5,  hunger: -3,  happiness: -12 },
 };
 
 //Helpers

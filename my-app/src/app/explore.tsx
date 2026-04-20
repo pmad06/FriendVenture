@@ -196,14 +196,21 @@ export default function TasksScreen() {
             />
             {/* buttons to add to either task assignment or exam */}
             <View style={styles.buttonRow}>
-              <Pressable style={styles.addButton} onPress={() => addTask('task')}>
-                <ThemedText type="small" style={{ color: '#000' }}>+ Task</ThemedText>
+              <Pressable style={styles.addButton} onPress={() => addTask('challenge')}>
+                <ThemedText type="small" style={{ color: '#000' }}>+ Challenge</ThemedText>
+                <ThemedText type="small" style={{ color: '#000', fontSize: 10}}> Go on a microadventure! Coffee with a friend, take a walk to the nearby park, etc.!</ThemedText>
               </Pressable>
               <Pressable style={styles.addButton} onPress={() => addTask('assignment')}>
                 <ThemedText type="small" style={{ color: '#000' }}>+ Assignment</ThemedText>
+                <ThemedText type="small" style={{ color: '#000', fontSize: 10}}> Finish your homework! Library or Cafe Hop!</ThemedText>
               </Pressable>
               <Pressable style={styles.addButton} onPress={() => addTask('exam')}>
                 <ThemedText type="small" style={{ color: '#000' }}>+ Exam</ThemedText>
+                <ThemedText type="small" style={{ color: '#000', fontSize: 10}}> Prepare for your upcoming exam! Check out a new lecture hall!</ThemedText>
+              </Pressable>
+              <Pressable style={styles.addButton} onPress={() => addTask('hobby')}>
+                <ThemedText type="small" style={{ color: '#000' }}>+ Personal Hobbies</ThemedText>
+                <ThemedText type="small" style={{ color: '#000', fontSize: 10}}> Try a new recipe, learn a musical instrument, or read a book!</ThemedText>
               </Pressable>
             </View>
           </View>
@@ -212,8 +219,8 @@ export default function TasksScreen() {
         {/* used collapsible from the expo template */}
         <View style={styles.sectionsWrapper}>
           <View style={{ backgroundColor: '#9bd0ec' }}>
-            <Collapsible title={`Tasks (${tasks.filter(t => t.type === 'task').length})`}>
-              {renderTaskList('task')}
+            <Collapsible title={`Challenges (${tasks.filter(t => t.type === 'challenge').length})`}>
+              {renderTaskList('challenge')}
             </Collapsible>
           </View>
           <View style={{ backgroundColor: '#9bd0ec' }}>
@@ -226,6 +233,11 @@ export default function TasksScreen() {
               {renderTaskList('exam')}
             </Collapsible>
           </View>
+          <View style={{ backgroundColor: '#9bd0ec' }}>
+            <Collapsible title={`Hobbies (${tasks.filter(t => t.type === 'hobby').length})`}>
+              {renderTaskList('hobby')}
+            </Collapsible>
+          </View>
         </View>
       </View>
     </ScrollView>
@@ -236,8 +248,8 @@ const styles = StyleSheet.create({
   scrollView:       { flex: 1 },
   contentContainer: { flexDirection: 'row', justifyContent: 'center' },
   container: {
-    maxWidth: MaxContentWidth, flexGrow: 1, backgroundColor: '#9bd0ec',
-    borderWidth: 1, borderColor: '#0F2B3A', borderRadius: Spacing.three, minHeight: 600,
+    maxWidth: 800, flexGrow: 1, backgroundColor: '#9bd0ec',
+    borderWidth: 1, borderColor: '#0F2B3A', borderRadius: Spacing.three, minHeight: 800,
   },
   titleContainer: { gap: Spacing.three, paddingHorizontal: Spacing.four, paddingVertical: Spacing.six },
   inputWrapper:   { padding: Spacing.three, borderRadius: Spacing.three, gap: Spacing.two, borderWidth: 1, borderColor: '#0F2B3A' },
