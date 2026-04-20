@@ -20,9 +20,11 @@ def init_db():
             email TEXT UNIQUE NOT NULL,
             username TEXT UNIQUE NOT NULL,
             password_hash TEXT NOT NULL,
+            role TEXT NOT NULL DEFAULT 'member',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+
     conn.execute('''
         CREATE TABLE IF NOT EXISTS pet_state (
             user_id   INTEGER PRIMARY KEY,
@@ -55,9 +57,12 @@ def init_db():
         )
     ''')
     conn.execute('''
-        CREATE TABLE IF NOT EXISTS user_settings (
-            user_id INTEGER PRIMARY KEY,
-            push_notifications INTEGER NOT NULL DEFAULT 1,
+        CREATE TABLE IF NOT EXISTS tasks (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            title TEXT NOT NULL,
+            type TEXT NOT NULL,
+            deadline TEXT,
             FOREIGN KEY (user_id) REFERENCES users(id)
         )
     ''')
