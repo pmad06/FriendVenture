@@ -345,12 +345,13 @@ def signup():
         return jsonify({"error": "Password must be at least 6 characters"}), 400
 
     password_hash = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+    role = "admin" if email.endswith("@friendventure.com") else "member"
 
     db = get_db()
     try:
         db.execute(
-            "INSERT INTO users (first_name, last_name, email, username, password_hash) VALUES (?, ?, ?, ?, ?)",
-            (first_name, last_name, email, username, password_hash),
+            "INSERT INTO users (first_name, last_name, email, username, password_hash, role) VALUES (?, ?, ?, ?, ?, ?)",
+            (first_name, last_name, email, username, password_hash, role),
         )
         db.commit()
         user = db.execute("SELECT id, role FROM users WHERE username = ?", (username,)).fetchone()
