@@ -126,7 +126,7 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.container}>
 
       {/* Left Panel — Friends */}
-      <View style={styles.leftPanel}>
+      {token && <View style={styles.leftPanel}>
         <Text style={styles.panelTitle}>Find Friends</Text>
 
         <TextInput
@@ -176,7 +176,7 @@ export default function HomeScreen() {
             )}
           />
         )}
-      </View>
+      </View>}
 
       {/* Center — Main Content */}
       <View style={styles.mainContent}>
@@ -185,7 +185,7 @@ export default function HomeScreen() {
       </View>
 
       {/* Right Panel — Leaderboard */}
-      <View style={styles.rightPanel}>
+      {token && <View style={styles.rightPanel}>
         <Text style={styles.panelTitle}>Leaderboard</Text>
         <Text style={styles.legendText}>Ranked by pet health</Text>
 
@@ -199,7 +199,7 @@ export default function HomeScreen() {
             showsVerticalScrollIndicator={false}
           />
         )}
-      </View>
+      </View>}
 
     </SafeAreaView>
   );
