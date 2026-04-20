@@ -23,6 +23,7 @@ export default function SettingsScreen() {
     // fetch profile on mount - [token] so it retries once the token loads from storage
     useEffect(() => {
         // don't fetch if not logged in yet
+        if (!token) return;
         const loadProfile = async () => {
         try {
             const res = await fetch(`${API_BASE_URL}/api/user/profile`, {
