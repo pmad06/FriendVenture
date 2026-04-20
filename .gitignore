@@ -1,6 +1,10 @@
 /.expo
 /node_modules
+<<<<<<< HEAD
+package-lock.json
+=======
 my-app/package-lock.json
 my-app/package.json
 my-app/package-lock.json
 my-app/package.json
+>>>>>>> a0e454ee536e759f75e67ba1b460e4054c62dff1

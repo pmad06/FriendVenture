@@ -245,6 +245,65 @@ def remove_friend():
         db.close()
 
 
+# ── Pet: get ─────────────────────────────────────────────────────────────────
+
+@app.route("/api/pet", methods=["GET"])
+def get_pet():
+    user_id = get_current_user_id()
+    if not user_id:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    db = get_db()
+    try:
+        db.execute("INSERT OR IGNORE INTO pet_state (user_id) VALUES (?)", (user_id,))
+        db.commit()
+        row = db.execute("SELECT * FROM pet_state WHERE user_id = ?", (user_id,)).fetchone()
+        return jsonify(dict(row)), 200
+    finally:
+        db.close()
+
+
+# ── Pet: save ─────────────────────────────────────────────────────────────────
+
+@app.route("/api/pet", methods=["POST"])
+def save_pet():
+    user_id = get_current_user_id()
+    if not user_id:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    data = request.get_json() or {}
+    db = get_db()
+    try:
+        db.execute(
+            """
+            INSERT INTO pet_state (user_id, health, hunger, happiness, color, accessory, shirt, name)
+            VALUES (:user_id, :health, :hunger, :happiness, :color, :accessory, :shirt, :name)
+            ON CONFLICT(user_id) DO UPDATE SET
+                health    = excluded.health,
+                hunger    = excluded.hunger,
+                happiness = excluded.happiness,
+                color     = excluded.color,
+                accessory = excluded.accessory,
+                shirt     = excluded.shirt,
+                name      = excluded.name
+            """,
+            {
+                "user_id":   user_id,
+                "health":    data.get("health", 85),
+                "hunger":    data.get("hunger", 60),
+                "happiness": data.get("happiness", 72),
+                "color":     data.get("color", "classic"),
+                "accessory": data.get("accessory", "none"),
+                "shirt":     data.get("shirt", "none"),
+                "name":      data.get("name", "Pandy"),
+            },
+        )
+        db.commit()
+        return jsonify({"ok": True}), 200
+    finally:
+        db.close()
+
+
 # ── Signup ──────────────────────────────────────────────────────────────────
 
 @app.route("/api/auth/signup", methods=["POST"])
@@ -377,6 +436,63 @@ def reset_password():
     finally:
         db.close()
 
+<<<<<<< HEAD
+=======
+# ── Tasks ─────────────────────────────────────────────────────────────────────
+
+@app.route("/api/tasks", methods=["GET"])
+def get_tasks():
+    user_id = get_current_user_id()
+    if not user_id:
+        return jsonify({"error": "Unauthorized"}), 401
+    db = get_db()
+    try:
+        rows = db.execute(
+            "SELECT id, title, type, deadline FROM tasks WHERE user_id = ? ORDER BY deadline ASC",
+            (user_id,)
+        ).fetchall()
+        return jsonify([dict(r) for r in rows]), 200
+    finally:
+        db.close()
+
+
+@app.route("/api/tasks", methods=["POST"])
+def add_task():
+    user_id = get_current_user_id()
+    if not user_id:
+        return jsonify({"error": "Unauthorized"}), 401
+    data = request.get_json()
+    title = data.get("title", "").strip()
+    type_ = data.get("type")
+    deadline = data.get("deadline")
+    if not title or type_ not in ("task", "assignment", "exam"):
+        return jsonify({"error": "Invalid data"}), 400
+    db = get_db()
+    try:
+        cursor = db.execute(
+            "INSERT INTO tasks (user_id, title, type, deadline) VALUES (?, ?, ?, ?)",
+            (user_id, title, type_, deadline)
+        )
+        db.commit()
+        return jsonify({"id": cursor.lastrowid, "title": title, "type": type_, "deadline": deadline}), 201
+    finally:
+        db.close()
+
+
+@app.route("/api/tasks/<int:task_id>", methods=["DELETE"])
+def delete_task(task_id):
+    user_id = get_current_user_id()
+    if not user_id:
+        return jsonify({"error": "Unauthorized"}), 401
+    db = get_db()
+    try:
+        db.execute("DELETE FROM tasks WHERE id = ? AND user_id = ?", (task_id, user_id))
+        db.commit()
+        return jsonify({"ok": True}), 200
+    finally:
+        db.close()
+
+>>>>>>> 5760ad70817d4f10c7696fd40d27912216326bb1
 
 if __name__ == "__main__":
     init_db()
