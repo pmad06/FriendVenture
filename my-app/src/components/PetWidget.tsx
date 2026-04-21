@@ -40,6 +40,7 @@ function PixelPanda({ size = 64, color, accessory, shirt }: {
   accessory: AccessoryKey;
   shirt: ShirtKey;
 }) {
+  // s is the pixel size - dividing by 16 since the panda is drawn on a 16x16 grid
   const s = size / 16;
   const { body, accent } = PANDA_COLORS[color];
 
@@ -116,6 +117,7 @@ function PixelPanda({ size = 64, color, accessory, shirt }: {
       <Rect x={7.2*s} y={6*s} width={1.6*s} height={0.8*s} fill={accent} rx={1} />
       <Rect x={6.5*s} y={6.9*s} width={0.6*s} height={0.5*s} fill={accent} />
       <Rect x={8.9*s} y={6.9*s} width={0.6*s} height={0.5*s} fill={accent} />
+      {/* cycle through shirt colors across columns using modulo */}
       {shirt !== 'none' && shirtRows.map(r =>
         shirtCols.map((c, ci) => (
           <Rect key={`shirt${r}${c}`} x={c*s} y={r*s} width={s} height={s}
