@@ -9,16 +9,19 @@ type Step = 'verify' | 'reset' | 'done';
 export default function ForgotPassword() {
   const router = useRouter();
 
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [newPassword, setNewPassword] = useState('');
+  const [username, setUsername]           = useState('');
+  const [email, setEmail]                 = useState('');
+  const [newPassword, setNewPassword]     = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [resetToken, setResetToken] = useState('');
+  // the backend gives us a short-lived reset token after identity is verified
+  const [resetToken, setResetToken]       = useState('');
 
-  const [step, setStep] = useState<Step>('verify');
-  const [error, setError] = useState('');
+  // 3-step flow: verify identity -> set password -> done
+  const [step, setStep]     = useState<Step>('verify');
+  const [error, setError]   = useState('');
   const [loading, setLoading] = useState(false);
 
+  // step 1 - check that the username and email match an account
   const handleVerify = async () => {
     setError('');
     if (!username.trim() || !email.trim()) {
@@ -46,6 +49,7 @@ export default function ForgotPassword() {
     }
   };
 
+  // step 2 - use the reset token to set a new password
   const handleReset = async () => {
     setError('');
     if (!newPassword || !confirmPassword) {
@@ -87,7 +91,7 @@ export default function ForgotPassword() {
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
 
-        {/* ── Step 1: Verify Identity ── */}
+        {/* step 1: verify identity */}
         {step === 'verify' && (
           <>
             <Text style={styles.note}>
@@ -122,7 +126,7 @@ export default function ForgotPassword() {
           </>
         )}
 
-        {/* ── Step 2: Set New Password ── */}
+        {/* step 2: set new password */}
         {step === 'reset' && (
           <>
             <Text style={styles.note}>Choose a new password.</Text>
@@ -152,7 +156,7 @@ export default function ForgotPassword() {
           </>
         )}
 
-        {/* ── Step 3: Done ── */}
+        {/* step 3: success */}
         {step === 'done' && (
           <>
             <Text style={styles.success}>✅ Password reset successfully!</Text>

@@ -4,6 +4,7 @@ import { Dimensions, StyleSheet, View } from 'react-native';
 import Animated, { Easing, Keyframe } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 
+// scale factor to make the icon fill the whole screen height at the start of the splash
 const INITIAL_SCALE_FACTOR = Dimensions.get('screen').height / 90;
 const DURATION = 600;
 
@@ -12,6 +13,7 @@ export function AnimatedSplashOverlay() {
 
   if (!visible) return null;
 
+  // fades out and shrinks back to normal size over DURATION ms
   const splashKeyframe = new Keyframe({
     0: {
       transform: [{ scale: INITIAL_SCALE_FACTOR }],
@@ -36,6 +38,7 @@ export function AnimatedSplashOverlay() {
       entering={splashKeyframe.duration(DURATION).withCallback((finished) => {
         'worklet';
         if (finished) {
+          // scheduleOnRN runs the state update on the JS thread after the animation
           scheduleOnRN(setVisible, false);
         }
       })}
@@ -71,6 +74,7 @@ const logoKeyframe = new Keyframe({
   },
 });
 
+// spins the glow image for 4 minutes continuously
 const glowKeyframe = new Keyframe({
   0: {
     transform: [{ rotateZ: '0deg' }],

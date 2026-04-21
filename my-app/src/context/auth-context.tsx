@@ -22,10 +22,12 @@ const AuthContext = createContext<AuthContextType>({
   logout: async () => {},
 });
 
-const TOKEN_KEY = 'fv_auth_token';
+// consistent key names so we don't accidentally mix up stored values
+const TOKEN_KEY    = 'fv_auth_token';
 const USERNAME_KEY = 'fv_auth_username';
-const ROLE_KEY = 'fv_auth_role';
+const ROLE_KEY     = 'fv_auth_role';
 
+// SecureStore on native, localStorage on web - same interface for both
 async function storeValue(key: string, value: string) {
   if (Platform.OS === 'web') {
     localStorage.setItem(key, value);
@@ -50,11 +52,12 @@ async function removeValue(key: string) {
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [token, setToken] = useState<string | null>(null);
+  const [token, setToken]       = useState<string | null>(null);
   const [username, setUsername] = useState<string | null>(null);
-  const [role, setRole] = useState<string | null>(null);
+  const [role, setRole]         = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // load all three values in parallel on first mount
   useEffect(() => {
     (async () => {
       try {
@@ -76,6 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     })();
   }, []);
 
+  // persist to storage then update state so the UI reflects the new user
   const login = async (newToken: string, newUsername: string, newRole: string) => {
     await Promise.all([
       storeValue(TOKEN_KEY, newToken),
@@ -95,6 +99,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
+    // isAuthenticated is derived from token so we don't need a separate boolean state
     <AuthContext.Provider
       value={{ token, username, role, isAuthenticated: !!token, isLoading, login, logout }}>
       {children}

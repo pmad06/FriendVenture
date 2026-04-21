@@ -4,9 +4,8 @@ import { useAuth } from '@/context/auth-context';
 
 const API = 'http://localhost:5000';
 
-//Types
+// Types
 
-//added hobby
 export type TaskType = 'challenge' | 'assignment' | 'exam' | 'hobby';
 
 export interface PetStats {
@@ -30,24 +29,24 @@ interface PetContextValue {
   onMissed: (type: TaskType) => void;
 }
 
-//Weights
-
+// harder tasks give bigger rewards and bigger penalties
 const REWARDS: Record<TaskType, PetStats> = {
-  challenge:       { health: 8,  hunger: 5,  happiness: 10 },
+  challenge:  { health: 8,  hunger: 5,  happiness: 10 },
   assignment: { health: 13, hunger: 8,  happiness: 15 },
   exam:       { health: 18, hunger: 12, happiness: 20 },
-  hobby:        { health: 5,  hunger: 3,  happiness: 12 },
+  hobby:      { health: 5,  hunger: 3,  happiness: 12 },
 };
 
 const PENALTIES: Record<TaskType, PetStats> = {
-  challenge:       { health: -12, hunger: -8,  happiness: -15 },
+  challenge:  { health: -12, hunger: -8,  happiness: -15 },
   assignment: { health: -18, hunger: -12, happiness: -20 },
   exam:       { health: -25, hunger: -18, happiness: -28 },
-  hobby:        { health: -5,  hunger: -3,  happiness: -12 },
+  hobby:      { health: -5,  hunger: -3,  happiness: -12 },
 };
 
-//Helpers
+// Helpers
 
+// keeps all stats clamped between 0 and 100
 const clamp = (val: number) => Math.min(100, Math.max(0, val));
 
 const applyDelta = (prev: PetStats, delta: PetStats): PetStats => ({
@@ -56,21 +55,20 @@ const applyDelta = (prev: PetStats, delta: PetStats): PetStats => ({
   happiness: clamp(prev.happiness + delta.happiness),
 });
 
-const DEFAULT_STATS: PetStats = { health: 85, hunger: 60, happiness: 72 };
+const DEFAULT_STATS: PetStats      = { health: 85, hunger: 60, happiness: 72 };
 const DEFAULT_APPEARANCE: Appearance = { name: 'Pandy', accessory: 'none', shirt: 'none', color: 'classic' };
-
-//Context
 
 const PetContext = createContext<PetContextValue | null>(null);
 
 export function PetProvider({ children }: { children: ReactNode }) {
   const { token } = useAuth();
-  const [stats, setStats] = useState<PetStats>(DEFAULT_STATS);
+  const [stats, setStats]               = useState<PetStats>(DEFAULT_STATS);
   const [appearance, setAppearanceState] = useState<Appearance>(DEFAULT_APPEARANCE);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // tracks whether we've loaded from the backend yet - prevents saving before that
   const loaded = useRef(false);
 
-  // Load from backend on login
+  // load pet state from backend whenever the user logs in
   useEffect(() => {
     if (!token) { loaded.current = false; return; }
     fetch(`${API}/api/pet`, { headers: { Authorization: `Bearer ${token}` } })
@@ -85,7 +83,7 @@ export function PetProvider({ children }: { children: ReactNode }) {
       .catch(() => {});
   }, [token]);
 
-  // Save to backend on change (debounced 800ms)
+  // debounce saves to 800ms so we don't spam the API on every stat change
   useEffect(() => {
     if (!token || !loaded.current) return;
     if (saveTimer.current) clearTimeout(saveTimer.current);
@@ -98,6 +96,7 @@ export function PetProvider({ children }: { children: ReactNode }) {
     }, 800);
   }, [stats, appearance, token]);
 
+  // partial update so callers only need to pass the fields they want to change
   const setAppearance = (patch: Partial<Appearance>) =>
     setAppearanceState(prev => ({ ...prev, ...patch }));
 
