@@ -20,6 +20,8 @@ export default function ForgotPassword() {
   const [step, setStep]     = useState<Step>('verify');
   const [error, setError]   = useState('');
   const [loading, setLoading] = useState(false);
+  const [hovered, setHovered] = useState(false);
+
 
   // step 1 - check that the username and email match an account
   const handleVerify = async () => {
@@ -117,10 +119,15 @@ export default function ForgotPassword() {
               autoCorrect={false}
             />
 
-            <Pressable style={styles.button} onPress={handleVerify} disabled={loading}>
+            <Pressable
+              style={[styles.button, hovered && styles.buttonHovered]}
+              onPress={handleVerify}
+              disabled={loading}
+              onHoverIn={() => setHovered(true)}
+              onHoverOut={() => setHovered(false)}>
               {loading
-                ? <ActivityIndicator color="white" />
-                : <Text style={styles.buttonText}>Verify Identity</Text>
+                ? <ActivityIndicator color={hovered ? '#0F2B3A' : 'white'} />
+                : <Text style={[styles.buttonText, hovered && styles.buttonTextHovered]}>Verify Identity</Text>
               }
             </Pressable>
           </>
@@ -179,14 +186,15 @@ export default function ForgotPassword() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: '#9bd0ec',
     justifyContent: 'center',
     alignItems: 'center',
   },
   container: {
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'hsl(0, 0%, 80%)',
+    backgroundColor: '#d2f2fc',
+    color: '#0F2B3A',
     borderRadius: 10,
     padding: 20,
     width: '90%',
@@ -209,25 +217,31 @@ const styles = StyleSheet.create({
     color: 'hsl(0, 0%, 20%)',
   },
   input: {
+    backgroundColor: '#9bd0ec',
     borderWidth: 1,
-    borderColor: 'hsl(0, 0%, 80%)',
+    borderColor: '#0F2B3A',
     borderRadius: 10,
     width: 250,
     padding: 10,
     marginBottom: 10,
   },
   button: {
-    backgroundColor: 'hsl(247, 83%, 66%)',
+    backgroundColor: '#0F2B3A',
     borderWidth: 2,
-    borderColor: 'hsl(247, 83%, 33%)',
     borderRadius: 10,
     width: 250,
     padding: 10,
     marginTop: 20,
     alignItems: 'center',
   },
+  buttonHovered: {
+    backgroundColor: '#9bd0ec',
+  },
   buttonText: {
     color: 'white',
+  },
+  buttonTextHovered: {
+    color: '#0F2B3A',
   },
   error: {
     color: 'hsl(0, 80%, 55%)',
@@ -243,7 +257,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   linkText: {
-    color: 'hsl(247, 83%, 66%)',
+    color: 'hsl(250, 61%, 10%)',
     fontSize: 13,
     marginTop: 16,
   },
