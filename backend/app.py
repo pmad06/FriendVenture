@@ -451,14 +451,8 @@ def reset_password():
         return jsonify({"message": "Password reset successfully"}), 200
     finally:
         db.close()
-
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-# ── Tasks ─────────────────────────────────────────────────────────────────────
-=======
+        
 # Tasks
->>>>>>> 7f56ac1abef8d4d1179b12d54e84308c8648c0ea
 
 # sorted by deadline so the most urgent tasks show first
 @app.route("/api/tasks", methods=["GET"])
