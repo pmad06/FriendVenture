@@ -5,24 +5,29 @@ import { Platform } from 'react-native';
 interface AuthContextType {
   token: string | null;
   username: string | null;
+  role: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (token: string, username: string) => Promise<void>;
+  login: (token: string, username: string, role: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
   token: null,
   username: null,
+  role: null,
   isAuthenticated: false,
   isLoading: true,
   login: async () => {},
   logout: async () => {},
 });
 
-const TOKEN_KEY = 'fv_auth_token';
+// consistent key names so we don't accidentally mix up stored values
+const TOKEN_KEY    = 'fv_auth_token';
 const USERNAME_KEY = 'fv_auth_username';
+const ROLE_KEY     = 'fv_auth_role';
 
+// SecureStore on native, localStorage on web - same interface for both
 async function storeValue(key: string, value: string) {
   if (Platform.OS === 'web') {
     localStorage.setItem(key, value);
@@ -47,20 +52,24 @@ async function removeValue(key: string) {
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [token, setToken] = useState<string | null>(null);
+  const [token, setToken]       = useState<string | null>(null);
   const [username, setUsername] = useState<string | null>(null);
+  const [role, setRole]         = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // load all three values in parallel on first mount
   useEffect(() => {
     (async () => {
       try {
-        const [storedToken, storedUsername] = await Promise.all([
+        const [storedToken, storedUsername, storedRole] = await Promise.all([
           loadValue(TOKEN_KEY),
           loadValue(USERNAME_KEY),
+          loadValue(ROLE_KEY),
         ]);
         if (storedToken) {
           setToken(storedToken);
           setUsername(storedUsername);
+          setRole(storedRole ?? 'member');
         }
       } catch (e) {
         console.error('Error loading auth state:', e);
@@ -70,21 +79,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     })();
   }, []);
 
-  const login = async (newToken: string, newUsername: string) => {
-    await Promise.all([storeValue(TOKEN_KEY, newToken), storeValue(USERNAME_KEY, newUsername)]);
+  // persist to storage then update state so the UI reflects the new user
+  const login = async (newToken: string, newUsername: string, newRole: string) => {
+    await Promise.all([
+      storeValue(TOKEN_KEY, newToken),
+      storeValue(USERNAME_KEY, newUsername),
+      storeValue(ROLE_KEY, newRole),
+    ]);
     setToken(newToken);
     setUsername(newUsername);
+    setRole(newRole);
   };
 
   const logout = async () => {
-    await Promise.all([removeValue(TOKEN_KEY), removeValue(USERNAME_KEY)]);
+    await Promise.all([removeValue(TOKEN_KEY), removeValue(USERNAME_KEY), removeValue(ROLE_KEY)]);
     setToken(null);
     setUsername(null);
+    setRole(null);
   };
 
   return (
+    // isAuthenticated is derived from token so we don't need a separate boolean state
     <AuthContext.Provider
-      value={{ token, username, isAuthenticated: !!token, isLoading, login, logout }}>
+      value={{ token, username, role, isAuthenticated: !!token, isLoading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

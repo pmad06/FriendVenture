@@ -9,14 +9,14 @@ export default function CreateAccount() {
   const router = useRouter();
   const { login } = useAuth();
 
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [email, setEmail] = useState('');
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [firstName, setFirstName]           = useState('');
+  const [lastName, setLastName]             = useState('');
+  const [email, setEmail]                   = useState('');
+  const [username, setUsername]             = useState('');
+  const [password, setPassword]             = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [error, setError]                   = useState('');
+  const [loading, setLoading]               = useState(false);
 
   const handleSignup = async () => {
     setError('');
@@ -24,6 +24,7 @@ export default function CreateAccount() {
       setError('All fields are required.');
       return;
     }
+    // basic email format check
     if (!/\S+@\S+\.\S+/.test(email)) {
       setError('Please enter a valid email address.');
       return;
@@ -54,7 +55,8 @@ export default function CreateAccount() {
         setError(data.error ?? 'Could not create account.');
         return;
       }
-      await login(data.token, data.username);
+      // log in right after signup so they don't have to do it again
+      await login(data.token, data.username, data.role ?? 'member');
       router.replace('/');
     } catch {
       setError('Could not connect to server. Check your network.');
@@ -122,11 +124,11 @@ export default function CreateAccount() {
           onChangeText={setConfirmPassword}
         />
 
-        <Pressable style={({hovered}) => [styles.button, hovered && styles.buttonHovered ]} onPress={handleSignup} disabled={loading}>
-          {({hovered}) => (
+        <Pressable style={({ hovered }) => [styles.button, hovered && styles.buttonHovered]} onPress={handleSignup} disabled={loading}>
+          {({ hovered }) => (
             loading
-            ? <ActivityIndicator color="white" />
-            : <Text style={[styles.buttonText, hovered && styles.buttonTextHovered]}>Create Account</Text>
+              ? <ActivityIndicator color="white" />
+              : <Text style={[styles.buttonText, hovered && styles.buttonTextHovered]}>Create Account</Text>
           )}
         </Pressable>
 

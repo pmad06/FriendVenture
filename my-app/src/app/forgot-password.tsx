@@ -9,16 +9,21 @@ type Step = 'verify' | 'reset' | 'done';
 export default function ForgotPassword() {
   const router = useRouter();
 
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [newPassword, setNewPassword] = useState('');
+  const [username, setUsername]           = useState('');
+  const [email, setEmail]                 = useState('');
+  const [newPassword, setNewPassword]     = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [resetToken, setResetToken] = useState('');
+  // the backend gives us a short-lived reset token after identity is verified
+  const [resetToken, setResetToken]       = useState('');
 
-  const [step, setStep] = useState<Step>('verify');
-  const [error, setError] = useState('');
+  // 3-step flow: verify identity -> set password -> done
+  const [step, setStep]     = useState<Step>('verify');
+  const [error, setError]   = useState('');
   const [loading, setLoading] = useState(false);
+  const [hovered, setHovered] = useState(false);
 
+
+  // step 1 - check that the username and email match an account
   const handleVerify = async () => {
     setError('');
     if (!username.trim() || !email.trim()) {
@@ -46,6 +51,7 @@ export default function ForgotPassword() {
     }
   };
 
+  // step 2 - use the reset token to set a new password
   const handleReset = async () => {
     setError('');
     if (!newPassword || !confirmPassword) {
@@ -87,7 +93,7 @@ export default function ForgotPassword() {
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
 
-        {/* ── Step 1: Verify Identity ── */}
+        {/* step 1: verify identity */}
         {step === 'verify' && (
           <>
             <Text style={styles.note}>
@@ -113,16 +119,21 @@ export default function ForgotPassword() {
               autoCorrect={false}
             />
 
-            <Pressable style={styles.button} onPress={handleVerify} disabled={loading}>
+            <Pressable
+              style={[styles.button, hovered && styles.buttonHovered]}
+              onPress={handleVerify}
+              disabled={loading}
+              onHoverIn={() => setHovered(true)}
+              onHoverOut={() => setHovered(false)}>
               {loading
-                ? <ActivityIndicator color="white" />
-                : <Text style={styles.buttonText}>Verify Identity</Text>
+                ? <ActivityIndicator color={hovered ? '#0F2B3A' : 'white'} />
+                : <Text style={[styles.buttonText, hovered && styles.buttonTextHovered]}>Verify Identity</Text>
               }
             </Pressable>
           </>
         )}
 
-        {/* ── Step 2: Set New Password ── */}
+        {/* step 2: set new password */}
         {step === 'reset' && (
           <>
             <Text style={styles.note}>Choose a new password.</Text>
@@ -152,7 +163,7 @@ export default function ForgotPassword() {
           </>
         )}
 
-        {/* ── Step 3: Done ── */}
+        {/* step 3: success */}
         {step === 'done' && (
           <>
             <Text style={styles.success}>✅ Password reset successfully!</Text>
@@ -175,14 +186,15 @@ export default function ForgotPassword() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: '#9bd0ec',
     justifyContent: 'center',
     alignItems: 'center',
   },
   container: {
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'hsl(0, 0%, 80%)',
+    backgroundColor: '#d2f2fc',
+    color: '#0F2B3A',
     borderRadius: 10,
     padding: 20,
     width: '90%',
@@ -205,25 +217,31 @@ const styles = StyleSheet.create({
     color: 'hsl(0, 0%, 20%)',
   },
   input: {
+    backgroundColor: '#9bd0ec',
     borderWidth: 1,
-    borderColor: 'hsl(0, 0%, 80%)',
+    borderColor: '#0F2B3A',
     borderRadius: 10,
     width: 250,
     padding: 10,
     marginBottom: 10,
   },
   button: {
-    backgroundColor: 'hsl(247, 83%, 66%)',
+    backgroundColor: '#0F2B3A',
     borderWidth: 2,
-    borderColor: 'hsl(247, 83%, 33%)',
     borderRadius: 10,
     width: 250,
     padding: 10,
     marginTop: 20,
     alignItems: 'center',
   },
+  buttonHovered: {
+    backgroundColor: '#9bd0ec',
+  },
   buttonText: {
     color: 'white',
+  },
+  buttonTextHovered: {
+    color: '#0F2B3A',
   },
   error: {
     color: 'hsl(0, 80%, 55%)',
@@ -239,7 +257,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   linkText: {
-    color: 'hsl(247, 83%, 66%)',
+    color: 'hsl(250, 61%, 10%)',
     fontSize: 13,
     marginTop: 16,
   },

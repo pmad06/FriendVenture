@@ -1,40 +1,50 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/auth-context';
 import { API_BASE_URL } from '@/constants/api';
-import { Pressable, ScrollView, StyleSheet, Switch, TextInput, TouchableOpacity, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, TextInput, TouchableOpacity, Text, View } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 export default function SettingsScreen() {
     const theme = useTheme();
+    // token is needed to authenticate every api call
     const { token } = useAuth();
 
-    const [pushNotifs, setPushNotifs] = useState(true);
-
+    // local state for all editable fields
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
     const [username, setUsername] = useState('');
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
 
-    // loads the user's name — runs again once token is ready
+    // fetch profile on mount - [token] so it retries once the token loads from storage
     useEffect(() => {
+        // don't fetch if not logged in yet
         if (!token) return;
-        fetch(`${API_BASE_URL}/api/user/profile`, {
-            headers: { Authorization: `Bearer ${token}` }
-        })
-        .then(r => r.json())
-        .then(data => {
+        const loadProfile = async () => {
+        try {
+            const res = await fetch(`${API_BASE_URL}/api/user/profile`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                alert(data.error || 'Failed to load profile');
+                return;
+            }
             setFirstName(data.firstName ?? '');
             setLastName(data.lastName ?? '');
             setUsername(data.username ?? '');
-            setPushNotifs(data.pushNotifications);
-        });
+        } catch (error) {
+            console.error('Profile fetch failed:', error);
+            alert('Could not connect to the server.');
+        }
+    };
+
+    loadProfile();
     }, [token]);
 
-    // when user presses save on their name
+    // saves name + username to the backend
     const saveProfile = async () => {
         const res = await fetch(`${API_BASE_URL}/api/user/profile`, {
             method: 'PUT',
@@ -73,7 +83,7 @@ export default function SettingsScreen() {
                     <View style={styles.inputWrapper}>
                         <Pressable style={styles.taskItem}>
                             <ThemedText>Personal Info</ThemedText>
-                            <TextInput 
+                            <TextInput
                                 style={styles.input}
                                 onChangeText={setFirstName}
                                 value={firstName}
@@ -115,40 +125,12 @@ export default function SettingsScreen() {
                                 secureTextEntry={true}
                             />
                             <TouchableOpacity style={styles.button} onPress ={changePassword}>
-                                <Text style={styles.text}>Reset Pasword</Text>
+                                <Text style={styles.text}>Reset Password</Text>
                             </TouchableOpacity>
                         </Pressable>
                     </View>
 
-                    {/* Notifications */}
-                    <ThemedText type="smallBold">NOTIFICATIONS</ThemedText>
-                    <ThemedView type="backgroundElement" style={styles.inputWrapper}>
-                        <View style={[styles.taskItem, styles.rowBetween]}>
-                            <ThemedText>Push Notifications</ThemedText>
-                            <Switch onValueChange={async (newValue) =>{ 
-                                setPushNotifs(newValue);
-                                await fetch(`${API_BASE_URL}/api/user/notifications`, {
-                                    method: 'PUT',
-                                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                                    body: JSON.stringify({ pushNotifications: newValue })
-                                });
-                            }} value={pushNotifs} />
-                        </View>
-                    </ThemedView>
 
-                    {/* Pet & Game */}
-                    <ThemedText type="smallBold">PET & GAME</ThemedText>
-                    <ThemedView type="backgroundElement" style={styles.inputWrapper}>
-                        <Pressable style={styles.taskItem}>
-                            <ThemedText>Pet Customization</ThemedText>
-                        </Pressable>
-                        <Pressable style={styles.taskItem}>
-                            <ThemedText>Weekly Goals</ThemedText>
-                        </Pressable>
-                        <Pressable style={styles.taskItem}>
-                            <ThemedText>Weekly Summary</ThemedText>
-                        </Pressable>
-                    </ThemedView>
 
                 </View>
             </View>

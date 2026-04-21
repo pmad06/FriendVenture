@@ -15,7 +15,7 @@ type Task = {
   type: TaskType;
   deadline?: Date;
   completed: boolean;
-  penalized: boolean; // true once we've already docked stats for this task
+  penalized: boolean; 
 };
 
 export default function TasksScreen() {
@@ -27,16 +27,16 @@ export default function TasksScreen() {
   const [inputText, setInputText] = useState('');
   const [deadline, setDeadline] = useState<Date | undefined>(undefined);
 
-  // Keep a ref so the interval always sees fresh tasks
   const tasksRef = useRef(tasks);
   useEffect(() => { tasksRef.current = tasks; }, [tasks]);
 
-  // ── Overdue checker: runs once per minute ──────────────────────────────────
+  //used to check if user missed the deadline for their assignments
   useEffect(() => {
     const check = () => {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
+      //updates pet status if user failed to finish their assignment on time
       setTasks(prev => {
         let changed = false;
         const next = prev.map(task => {
@@ -44,7 +44,7 @@ export default function TasksScreen() {
           const due = new Date(task.deadline);
           due.setHours(0, 0, 0, 0);
           if (due <= today) {
-            onMissed(task.type);   // apply penalty
+            onMissed(task.type);   
             changed = true;
             return { ...task, penalized: true };
           }
@@ -54,23 +54,26 @@ export default function TasksScreen() {
       });
     };
 
-    check(); // run immediately on mount
+    check(); 
     const interval = setInterval(check, 60_000);
     return () => clearInterval(interval);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []); 
 
-  //Countdown label
+  //calculates how many days are left until the assignment is due 
   const getCountdown = (deadline: Date) => {
     const now = new Date();
     now.setHours(0, 0, 0, 0);
-    const diff = deadline.getTime() - now.getTime();
-    const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
-    if (days < 0)  return { label: 'Overdue',     color: '#e05252' };
-    if (days === 0) return { label: 'Due today',   color: '#e09a52' };
-    return             { label: `${days} day${days !== 1 ? 's' : ''} left`, color: '#000' };
+    const due = new Date(deadline);
+    due.setHours(0, 0, 0, 0);
+    const diff = due.getTime() - now.getTime();
+    const days = Math.round(diff / (1000 * 60 * 60 * 24));
+
+    if (days < 0)   return { label: 'Overdue',     color: '#9d3f3f' };
+    if (days === 0) return { label: 'Due today',   color: '#a89543' };
+    return             { label: `${days} day${days !== 1 ? 's' : ''} left`, color: '#66b966' };
   };
 
-  //Add task 
+  //user can add their task 
   const addTask = (type: TaskType) => {
     if (inputText.trim() === '') return;
     const newTask: Task = {
@@ -86,7 +89,8 @@ export default function TasksScreen() {
     setDeadline(undefined);
   };
 
-  //Toggle completion
+  //checkbox so users can actually say if they completed their assignments or tasks
+  //pet status and health changes based on what the user says
   const toggleComplete = (id: string) => {
     setTasks(prev => prev.map(task => {
       if (task.id !== id) return task;
@@ -102,11 +106,15 @@ export default function TasksScreen() {
     }));
   };
 
+  const deleteTask = (id: string) => {
+    setTasks(prev => prev.filter(task => task.id !== id));
+  };
+
   const platformStyle = Platform.select({
     web: { paddingTop: Spacing.six, paddingBottom: Spacing.four },
   });
 
-  //Render task list
+  //users can associate their to do item with task assignment or exam 
   const renderTaskList = (type: TaskType) => {
     const filtered = tasks.filter(t => t.type === type);
     if (filtered.length === 0) {
@@ -118,14 +126,21 @@ export default function TasksScreen() {
       return (
         <View key={task.id} style={[styles.taskItem, task.completed && styles.taskCompleted]}>
           <View style={styles.taskRow}>
-            {/* Checkbox */}
+            {/* Checkbox for the user */}
             <Pressable
               onPress={() => toggleComplete(task.id)}
               style={[styles.checkbox, task.completed && styles.checkboxChecked]}>
               {task.completed && <ThemedText style={styles.checkmark}>✓</ThemedText>}
             </Pressable>
 
+            <Pressable
+              onPress={() => deleteTask(task.id)}
+              style={styles.deleteButton}>
+              <ThemedText style={styles.deleteText}>✕</ThemedText>
+          </Pressable>
+
             <View style={{ flex: 1 }}>
+              {/* strikes through name of task because user marked it as complete */}
               <ThemedText style={task.completed ? styles.taskTitleDone : undefined}>
                 {task.title}
               </ThemedText>
@@ -137,9 +152,10 @@ export default function TasksScreen() {
                   <ThemedText type="small" style={[styles.countdown, { color: countdown.color }]}>
                     {countdown.label}
                   </ThemedText>
+                  {/* pet status got hit because user missed deadline*/}
                   {isOverdue && (
                     <ThemedText type="small" style={styles.penaltyBadge}>
-                      📉 stats hit
+                      *pet health hit
                     </ThemedText>
                   )}
                 </View>
@@ -161,6 +177,7 @@ export default function TasksScreen() {
         <View style={styles.titleContainer}>
           <ThemedText type="subtitle" style={{ fontSize: 28, color: '#0F2B3A' }}>To-Do List</ThemedText>
 
+          {/* input section for users like their text field and the date picker for deadline */}
           <View style={styles.inputWrapper}>
             <TextInput
               style={[styles.input, { color: '#000' }]}
@@ -171,9 +188,19 @@ export default function TasksScreen() {
             />
             <input
               type="date"
-              min={new Date().toISOString().split('T')[0]}
+              min={(() => {
+                const d = new Date();
+                return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+              })()}
               value={deadline ? deadline.toISOString().split('T')[0] : ''}
-              onChange={(e) => setDeadline(e.target.value ? new Date(e.target.value) : undefined)}
+              onChange={(e) => {
+                if (!e.target.value) {
+                  setDeadline(undefined);
+                  return;
+                }
+                const [year, month, day] = e.target.value.split('-').map(Number);
+                setDeadline(new Date(year, month - 1, day)); // local time, not UTC
+              }}
               style={{
                 fontSize: 16,
                 paddingTop: 9,
@@ -189,34 +216,49 @@ export default function TasksScreen() {
                 outline: 'none',
               }}
             />
+            {/* buttons to add to either task assignment or exam */}
             <View style={styles.buttonRow}>
-              <Pressable style={styles.addButton} onPress={() => addTask('task')}>
-                <ThemedText type="small" style={{ color: '#000' }}>+ Task</ThemedText>
+              <Pressable style={styles.addButton} onPress={() => addTask('challenge')}>
+                <ThemedText type="small" style={{ color: '#000' }}>+ Challenge</ThemedText>
+                <ThemedText type="small" style={{ color: '#000', fontSize: 10}}> Go on a microadventure! Coffee with a friend, take a walk to the nearby park, etc.!</ThemedText>
               </Pressable>
               <Pressable style={styles.addButton} onPress={() => addTask('assignment')}>
                 <ThemedText type="small" style={{ color: '#000' }}>+ Assignment</ThemedText>
+                <ThemedText type="small" style={{ color: '#000', fontSize: 10}}> Finish your homework! Library or Cafe Hop!</ThemedText>
               </Pressable>
               <Pressable style={styles.addButton} onPress={() => addTask('exam')}>
                 <ThemedText type="small" style={{ color: '#000' }}>+ Exam</ThemedText>
+                <ThemedText type="small" style={{ color: '#000', fontSize: 10}}> Prepare for your upcoming exam! Check out a new lecture hall!</ThemedText>
+              </Pressable>
+              {/* added hobby button */}
+              <Pressable style={styles.addButton} onPress={() => addTask('hobby')}>
+                <ThemedText type="small" style={{ color: '#000' }}>+ Personal Hobbies</ThemedText>
+                <ThemedText type="small" style={{ color: '#000', fontSize: 10}}> Try a new recipe, learn a musical instrument, or read a book!</ThemedText>
               </Pressable>
             </View>
           </View>
         </View>
 
+        {/* used collapsible from the expo template */}
         <View style={styles.sectionsWrapper}>
           <View style={{ backgroundColor: '#9bd0ec' }}>
-            <Collapsible title={`Tasks (${tasks.filter(t => t.type === 'task').length})`}>
-              {renderTaskList('task')}
+            <Collapsible title={`Challenges (${tasks.filter(t => t.type === 'challenge').length})`}>
+              {renderTaskList('challenge')}
             </Collapsible>
           </View>
-          <View style={{ backgroundColor: '#C9ECF6' }}>
+          <View style={{ backgroundColor: '#9bd0ec' }}>
             <Collapsible title={`Assignments (${tasks.filter(t => t.type === 'assignment').length})`}>
               {renderTaskList('assignment')}
             </Collapsible>
           </View>
-          <View style={{ backgroundColor: '#C9ECF6' }}>
+          <View style={{ backgroundColor: '#9bd0ec' }}>
             <Collapsible title={`Exams (${tasks.filter(t => t.type === 'exam').length})`}>
               {renderTaskList('exam')}
+            </Collapsible>
+          </View>
+          <View style={{ backgroundColor: '#9bd0ec' }}>
+            <Collapsible title={`Hobbies (${tasks.filter(t => t.type === 'hobby').length})`}>
+              {renderTaskList('hobby')}
             </Collapsible>
           </View>
         </View>
@@ -229,8 +271,8 @@ const styles = StyleSheet.create({
   scrollView:       { flex: 1 },
   contentContainer: { flexDirection: 'row', justifyContent: 'center' },
   container: {
-    maxWidth: MaxContentWidth, flexGrow: 1, backgroundColor: '#9bd0ec',
-    borderWidth: 1, borderColor: '#0F2B3A', borderRadius: Spacing.three, minHeight: 600,
+    maxWidth: 800, flexGrow: 1, backgroundColor: '#9bd0ec',
+    borderWidth: 1, borderColor: '#0F2B3A', borderRadius: Spacing.three, minHeight: 800,
   },
   titleContainer: { gap: Spacing.three, paddingHorizontal: Spacing.four, paddingVertical: Spacing.six },
   inputWrapper:   { padding: Spacing.three, borderRadius: Spacing.three, gap: Spacing.two, borderWidth: 1, borderColor: '#0F2B3A' },
@@ -253,6 +295,8 @@ const styles = StyleSheet.create({
   deadlineRow:     { flexDirection: 'row', gap: Spacing.two, alignItems: 'center', flexWrap: 'wrap' },
   deadlineDate:    { opacity: 0.6 },
   countdown:       { fontWeight: '600' },
-  penaltyBadge:    { color: '#e05252', fontWeight: '600' },
+  penaltyBadge:    { color: '#171426', fontWeight: '600' },
   emptyText:       { fontStyle: 'italic', opacity: 0.6 },
+  deleteButton: { paddingHorizontal: Spacing.two, paddingVertical: Spacing.one, justifyContent: 'center', alignItems: 'center'},
+  deleteText:   { color: '#131732', fontSize: 16, fontWeight: '700' },
 });

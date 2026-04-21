@@ -10,10 +10,11 @@ export default function Login() {
   const { login } = useAuth();
 
   const [identifier, setIdentifier] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [password, setPassword]     = useState('');
+  const [error, setError]           = useState('');
+  const [loading, setLoading]       = useState(false);
 
+  // accepts either username or email - backend handles both
   const handleLogin = async () => {
     setError('');
     if (!identifier.trim() || !password) {
@@ -32,7 +33,7 @@ export default function Login() {
         setError(data.error ?? 'Login failed. Please try again.');
         return;
       }
-      await login(data.token, data.username);
+      await login(data.token, data.username, data.role ?? 'member');
       router.replace('/');
     } catch {
       setError('Could not connect to server. Check your network.');
@@ -65,16 +66,17 @@ export default function Login() {
           onChangeText={setPassword}
         />
 
+        {/* hovered is a web-only Pressable feature for hover state styling */}
         <Pressable
           onPress={handleLogin}
           disabled={loading}
-          style = {({hovered}) => [
-            styles.button, 
+          style={({ hovered }) => [
+            styles.button,
             hovered && styles.buttonHovered,
           ]}
         >
-          { ({hovered}) => (
-              loading
+          {({ hovered }) => (
+            loading
               ? <ActivityIndicator color="white" />
               : <Text style={[styles.buttonText, hovered && styles.buttonTextHovered]}>Submit</Text>
           )}
@@ -132,13 +134,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   buttonHovered: {
-     backgroundColor: '#9bd0ec',
+    backgroundColor: '#9bd0ec',
   },
   buttonText: {
     color: 'white',
   },
   buttonTextHovered: {
-     color: '#0F2B3A',
+    color: '#0F2B3A',
   },
   error: {
     color: 'hsl(0, 80%, 55%)',

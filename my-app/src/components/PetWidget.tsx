@@ -40,6 +40,7 @@ function PixelPanda({ size = 64, color, accessory, shirt }: {
   accessory: AccessoryKey;
   shirt: ShirtKey;
 }) {
+  // s is the pixel size - dividing by 16 since the panda is drawn on a 16x16 grid
   const s = size / 16;
   const { body, accent } = PANDA_COLORS[color];
 
@@ -116,6 +117,7 @@ function PixelPanda({ size = 64, color, accessory, shirt }: {
       <Rect x={7.2*s} y={6*s} width={1.6*s} height={0.8*s} fill={accent} rx={1} />
       <Rect x={6.5*s} y={6.9*s} width={0.6*s} height={0.5*s} fill={accent} />
       <Rect x={8.9*s} y={6.9*s} width={0.6*s} height={0.5*s} fill={accent} />
+      {/* cycle through shirt colors across columns using modulo */}
       {shirt !== 'none' && shirtRows.map(r =>
         shirtCols.map((c, ci) => (
           <Rect key={`shirt${r}${c}`} x={c*s} y={r*s} width={s} height={s}
@@ -325,12 +327,10 @@ export default function PetWidget() {
 
                 <SectionHeader title="How it works" />
                 <View style={styles.tipsList}>
-                  <Text style={styles.tip}>Complete a task: small boost (+8 health, +5 hunger, +10 happiness)</Text>
-                  <Text style={styles.tip}>Complete an assignment: medium boost (+13 health, +8 hunger, +15 happiness)</Text>
-                  <Text style={styles.tip}>Complete an exam: big boost (+18 health, +12 hunger, +20 happiness)</Text>
-                  <Text style={styles.tip}>Missing a task: -12 health, -8 hunger, -15 happiness</Text>
-                  <Text style={styles.tip}>Missing an assignment: -18 health, -12 hunger, -20 happiness</Text>
-                  <Text style={styles.tip}>Missing an exam: -25 health, -18 hunger, -28 happiness</Text>
+                  <Text style={styles.tip}>Complete a challenge: +8 health, +5 hunger, +10 happiness</Text>
+                  <Text style={styles.tip}>Complete an assignment: +13 health, +8 hunger, +15 happiness</Text>
+                  <Text style={styles.tip}>Complete an exam: +18 health, +12 hunger, +20 happiness</Text>
+                  <Text style={styles.tip}>Complete a hobby: +5 health, +3 hunger, +12 happiness</Text>
                 </View>
               </>
             )}
