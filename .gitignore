@@ -6,3 +6,4 @@ my-app/package-lock.json
 my-app/package.json
 backend/friendventure.db
 backend/_pycache__
+package-lock.json
