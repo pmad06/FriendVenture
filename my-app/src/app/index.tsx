@@ -21,12 +21,12 @@ export default function HomeScreen() {
   const { token } = useAuth();
   const { stats } = usePet();
 
-  const [query, setQuery] = useState('');
-  const [results, setResults] = useState<User[]>([]);
-  const [friends, setFriends] = useState<User[]>([]);
+  const [query, setQuery]           = useState('');
+  const [results, setResults]       = useState<User[]>([]);
+  const [friends, setFriends]       = useState<User[]>([]);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
 
-  // ── Fetch friends ──────────────────────────────────────────────────────────
+  // fetch friends on load
   useEffect(() => {
     if (!token) return;
     fetch(`${API}/api/friends`, {
@@ -37,7 +37,7 @@ export default function HomeScreen() {
       .catch(() => {});
   }, [token]);
 
-  // ── Search users ───────────────────────────────────────────────────────────
+  // search runs on every keystroke, clears results when input is empty
   useEffect(() => {
     if (!token || query.length === 0) { setResults([]); return; }
     fetch(`${API}/api/users/search?q=${encodeURIComponent(query)}`, {
@@ -48,7 +48,7 @@ export default function HomeScreen() {
       .catch(() => {});
   }, [query, token]);
 
-  // ── Build leaderboard from friends + self ──────────────────────────────────
+  // rebuild leaderboard whenever friends list or own health changes
   useEffect(() => {
     const myEntry: LeaderboardEntry = {
       id: 0,
@@ -58,7 +58,7 @@ export default function HomeScreen() {
       isMe: true,
     };
 
-    // Placeholder health for friends until backend supports pet stats
+    // friends without a pet_state row default to 85 health on the backend
     const friendEntries: LeaderboardEntry[] = friends.map(f => ({
       id: f.id,
       name: f.name,
@@ -102,6 +102,7 @@ export default function HomeScreen() {
 
   const renderLeaderboardItem = ({ item }: { item: LeaderboardEntry }) => (
     <View style={[styles.leaderRow, item.isMe && styles.leaderRowMe]}>
+      {/* top 3 ranks get full opacity */}
       <Text style={[styles.rankText, item.rank <= 3 && styles.rankTextTop]}>
         #{item.rank}
       </Text>
@@ -125,7 +126,7 @@ export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.container}>
 
-      {/* Left Panel — Friends */}
+      {/* left panel only shows when logged in */}
       {token && <View style={styles.leftPanel}>
         <Text style={styles.panelTitle}>Find Friends</Text>
 
@@ -178,13 +179,13 @@ export default function HomeScreen() {
         )}
       </View>}
 
-      {/* Center — Main Content */}
+      {/* center always visible */}
       <View style={styles.mainContent}>
         <Text style={styles.title}>FriendVenture</Text>
         <Text style={styles.subtitle}>Your adventures, together.</Text>
       </View>
 
-      {/* Right Panel — Leaderboard */}
+      {/* right panel only shows when logged in */}
       {token && <View style={styles.rightPanel}>
         <Text style={styles.panelTitle}>Leaderboard</Text>
         <Text style={styles.legendText}>Ranked by pet health</Text>
@@ -212,7 +213,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
 
-  // ── Left Panel ─────────────────────────────────────────────────────────────
   leftPanel: {
     width: '25%',
     backgroundColor: '#C9ECF6',
@@ -222,7 +222,6 @@ const styles = StyleSheet.create({
     paddingTop: 24,
   },
 
-  // ── Center ─────────────────────────────────────────────────────────────────
   mainContent: {
     flex: 1,
     justifyContent: 'center',
@@ -239,7 +238,6 @@ const styles = StyleSheet.create({
     color: '#0F2B3A',
   },
 
-  // ── Right Panel ────────────────────────────────────────────────────────────
   rightPanel: {
     width: '25%',
     backgroundColor: '#C9ECF6',
@@ -249,7 +247,6 @@ const styles = StyleSheet.create({
     paddingTop: 24,
   },
 
-  // ── Shared ─────────────────────────────────────────────────────────────────
   panelTitle: {
     fontSize: 18,
     fontWeight: '700',
@@ -293,7 +290,6 @@ const styles = StyleSheet.create({
     color: '#C9ECF6',
   },
 
-  // ── Friends panel ──────────────────────────────────────────────────────────
   searchBar: {
     backgroundColor: 'white',
     borderRadius: 50,
@@ -335,7 +331,6 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
 
-  // ── Leaderboard panel ──────────────────────────────────────────────────────
   leaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
