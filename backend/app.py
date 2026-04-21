@@ -8,12 +8,14 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 
 app = Flask(__name__)
+# allow requests from any origin so the expo app can hit the API
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 SECRET_KEY = os.environ.get("JWT_SECRET", "friendventure-secret-change-in-prod")
 RESET_SECRET = os.environ.get("RESET_SECRET", "friendventure-reset-secret-change-in-prod")
 
 
+# 7 days felt like a good balance between convenience and security
 def generate_auth_token(user_id: int, username: str, role: str) -> str:
     payload = {
         "user_id": user_id,
@@ -22,6 +24,7 @@ def generate_auth_token(user_id: int, username: str, role: str) -> str:
         "exp": datetime.datetime.utcnow() + datetime.timedelta(days=7),
     }
     return jwt.encode(payload, SECRET_KEY, algorithm="HS256")
+
 
 ## will return current user info if a valid token is provided, otherwise None. used by the @require_admin decorator and route handlers to get the logged-in user's id and role.
 def get_current_user():
@@ -68,6 +71,7 @@ def get_profile():
 
         settings = db.execute("SELECT push_notifications FROM user_settings WHERE user_id = ?", (user_id,)).fetchone()
 
+        # default to True if they haven't saved a preference yet
         push_notifications = bool(settings["push_notifications"]) if settings else True
         return jsonify({"firstName": user["first_name"], "lastName": user["last_name"], "username": user["username"], "role": user["role"], "pushNotifications": push_notifications}), 200
     finally:
@@ -99,7 +103,7 @@ def update_profile():
         db.commit()
         return jsonify({"message": "Profile updated!"}), 200
     except Exception as e:
-        # username has a unique constraint 
+        # username has a unique constraint
         if "users.username" in str(e):
             return jsonify({"error": "Username is already taken"}), 409
         return jsonify({"error": "Could not update profile"}), 500
@@ -154,7 +158,7 @@ def update_notifications():
     finally:
         db.close()
 
-# ── Users: search ────────────────────────────────────────────────────────────
+# Users: search
 
 @app.route("/api/users/search", methods=["GET"])
 def search_users():
@@ -168,6 +172,7 @@ def search_users():
 
     db = get_db()
     try:
+        # exclude the current user from results, search by username or full name
         rows = db.execute(
             """
             SELECT id, username, first_name || ' ' || last_name AS name
@@ -183,7 +188,7 @@ def search_users():
         db.close()
 
 
-# ── Friends: add ─────────────────────────────────────────────────────────────
+# Friends: add
 
 @app.route("/api/friends/add", methods=["POST"])
 def add_friend():
@@ -198,6 +203,8 @@ def add_friend():
 
     db = get_db()
     try:
+        # insert both directions so either user can query their friend list
+        # OR IGNORE handles the case where they're already friends
         db.execute(
             "INSERT OR IGNORE INTO friendships (user_id, friend_id) VALUES (?, ?)",
             (user_id, friend_id),
@@ -212,7 +219,7 @@ def add_friend():
         db.close()
 
 
-# ── Friends: list ─────────────────────────────────────────────────────────────
+# Friends: list
 
 @app.route("/api/friends", methods=["GET"])
 def get_friends():
@@ -222,6 +229,7 @@ def get_friends():
 
     db = get_db()
     try:
+        # LEFT JOIN so friends without a pet still show up, defaulting health to 85
         rows = db.execute(
             """
             SELECT u.id, u.username, u.first_name || ' ' || u.last_name AS name,
@@ -238,7 +246,7 @@ def get_friends():
         db.close()
 
 
-# ── Friends: remove ──────────────────────────────────────────────────────────
+# Friends: remove
 
 @app.route("/api/friends/remove", methods=["POST"])
 def remove_friend():
@@ -253,6 +261,7 @@ def remove_friend():
 
     db = get_db()
     try:
+        # delete both rows so the friendship is gone for both users
         db.execute(
             "DELETE FROM friendships WHERE user_id = ? AND friend_id = ?",
             (user_id, friend_id),
@@ -267,7 +276,7 @@ def remove_friend():
         db.close()
 
 
-# ── Pet: get ─────────────────────────────────────────────────────────────────
+# Pet: get
 
 @app.route("/api/pet", methods=["GET"])
 def get_pet():
@@ -277,6 +286,7 @@ def get_pet():
 
     db = get_db()
     try:
+        # create a default pet row if this user doesn't have one yet
         db.execute("INSERT OR IGNORE INTO pet_state (user_id) VALUES (?)", (user_id,))
         db.commit()
         row = db.execute("SELECT * FROM pet_state WHERE user_id = ?", (user_id,)).fetchone()
@@ -285,7 +295,7 @@ def get_pet():
         db.close()
 
 
-# ── Pet: save ─────────────────────────────────────────────────────────────────
+# Pet: save
 
 @app.route("/api/pet", methods=["POST"])
 def save_pet():
@@ -296,6 +306,7 @@ def save_pet():
     data = request.get_json() or {}
     db = get_db()
     try:
+        # upsert - insert on first save, update on every save after that
         db.execute(
             """
             INSERT INTO pet_state (user_id, health, hunger, happiness, color, accessory, shirt, name)
@@ -326,7 +337,7 @@ def save_pet():
         db.close()
 
 
-# ── Signup ──────────────────────────────────────────────────────────────────
+# Signup
 
 @app.route("/api/auth/signup", methods=["POST"])
 def signup():
@@ -345,6 +356,7 @@ def signup():
         return jsonify({"error": "Password must be at least 6 characters"}), 400
 
     password_hash = bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+    # friendventure.com emails get admin access automatically
     role = "admin" if email.endswith("@friendventure.com") else "member"
 
     db = get_db()
@@ -368,7 +380,7 @@ def signup():
         db.close()
 
 
-# ── Login ────────────────────────────────────────────────────────────────────
+# Login
 
 @app.route("/api/auth/login", methods=["POST"])
 def login():
@@ -381,6 +393,7 @@ def login():
 
     db = get_db()
     try:
+        # let users log in with either their username or email
         user = db.execute(
             "SELECT * FROM users WHERE username = ? OR email = ?",
             (identifier, identifier),
@@ -395,7 +408,7 @@ def login():
         db.close()
 
 
-# ── Forgot Password – step 1: verify identity ────────────────────────────────
+# Forgot Password - step 1: verify identity
 
 @app.route("/api/auth/verify-reset", methods=["POST"])
 def verify_reset():
@@ -408,6 +421,7 @@ def verify_reset():
 
     db = get_db()
     try:
+        # both username and email must match the same account
         user = db.execute(
             "SELECT id FROM users WHERE username = ? AND email = ?",
             (username, email),
@@ -416,6 +430,7 @@ def verify_reset():
         if not user:
             return jsonify({"error": "No account found with that username and email"}), 404
 
+        # short expiry since this token just unlocks the reset step
         reset_payload = {
             "user_id": user["id"],
             "type": "reset",
@@ -427,7 +442,7 @@ def verify_reset():
         db.close()
 
 
-# ── Forgot Password – step 2: set new password ───────────────────────────────
+# Forgot Password - step 2: set new password
 
 @app.route("/api/auth/reset-password", methods=["POST"])
 def reset_password():
@@ -437,6 +452,7 @@ def reset_password():
 
     try:
         payload = jwt.decode(data["reset_token"], RESET_SECRET, algorithms=["HS256"])
+        # make sure it's actually a reset token and not the regular auth token
         if payload.get("type") != "reset":
             return jsonify({"error": "Invalid reset token"}), 400
         user_id = payload["user_id"]
@@ -459,8 +475,9 @@ def reset_password():
     finally:
         db.close()
 
-# ── Tasks ─────────────────────────────────────────────────────────────────────
+# Tasks
 
+# sorted by deadline so the most urgent tasks show first
 @app.route("/api/tasks", methods=["GET"])
 def get_tasks():
     user_id = get_current_user_id()
@@ -486,6 +503,7 @@ def add_task():
     title = data.get("title", "").strip()
     type_ = data.get("type")
     deadline = data.get("deadline")
+    # validate type against the allowed values
     if not title or type_ not in ("challenge", "assignment", "exam", "hobby"):
         return jsonify({"error": "Invalid data"}), 400
     db = get_db()
@@ -495,6 +513,7 @@ def add_task():
             (user_id, title, type_, deadline)
         )
         db.commit()
+        # return the new task with its generated id so the frontend can track it
         return jsonify({"id": cursor.lastrowid, "title": title, "type": type_, "deadline": deadline}), 201
     finally:
         db.close()
@@ -507,14 +526,16 @@ def delete_task(task_id):
         return jsonify({"error": "Unauthorized"}), 401
     db = get_db()
     try:
+        # include user_id in the WHERE so users can't delete each other's tasks
         db.execute("DELETE FROM tasks WHERE id = ? AND user_id = ?", (task_id, user_id))
         db.commit()
         return jsonify({"ok": True}), 200
     finally:
         db.close()
 
-# ── Admin ─────────────────────────────────────────────────────────────────────
-# will list users info, including name, username, email, role, and registration date. 
+# Admin
+
+# will list users info, including name, username, email, role, and registration date.
 @app.route("/api/admin/users", methods=["GET"])
 @require_admin
 def admin_list_users():
@@ -573,7 +594,7 @@ def admin_create_user():
         db.close()
 
 
-# admin can delete a user 
+# admin can delete a user
 @app.route("/api/admin/users/<int:target_id>", methods=["DELETE"])
 @require_admin
 def admin_delete_user(target_id):
@@ -582,6 +603,7 @@ def admin_delete_user(target_id):
         return jsonify({"error": "You cannot delete your own account"}), 400
     db = get_db()
     try:
+        # clean up all related data first or foreign keys will block the delete
         db.execute("DELETE FROM friendships WHERE user_id = ? OR friend_id = ?", (target_id, target_id))
         db.execute("DELETE FROM tasks WHERE user_id = ?", (target_id,))
         db.execute("DELETE FROM pet_state WHERE user_id = ?", (target_id,))
