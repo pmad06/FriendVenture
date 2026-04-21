@@ -63,12 +63,14 @@ export default function TasksScreen() {
   const getCountdown = (deadline: Date) => {
     const now = new Date();
     now.setHours(0, 0, 0, 0);
-    const diff = deadline.getTime() - now.getTime();
-    const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
-    //styling associated with when the assignment is due
-    if (days < 0)  return { label: 'Overdue',     color: '#e05252' };
-    if (days === 0) return { label: 'Due today',   color: '#e09a52' };
-    return             { label: `${days} day${days !== 1 ? 's' : ''} left`, color: '#000' };
+    const due = new Date(deadline);
+    due.setHours(0, 0, 0, 0);
+    const diff = due.getTime() - now.getTime();
+    const days = Math.round(diff / (1000 * 60 * 60 * 24));
+
+    if (days < 0)   return { label: 'Overdue',     color: '#9d3f3f' };
+    if (days === 0) return { label: 'Due today',   color: '#a89543' };
+    return             { label: `${days} day${days !== 1 ? 's' : ''} left`, color: '#66b966' };
   };
 
   //user can add their task 
@@ -104,6 +106,10 @@ export default function TasksScreen() {
     }));
   };
 
+  const deleteTask = (id: string) => {
+    setTasks(prev => prev.filter(task => task.id !== id));
+  };
+
   const platformStyle = Platform.select({
     web: { paddingTop: Spacing.six, paddingBottom: Spacing.four },
   });
@@ -127,6 +133,12 @@ export default function TasksScreen() {
               {task.completed && <ThemedText style={styles.checkmark}>✓</ThemedText>}
             </Pressable>
 
+            <Pressable
+              onPress={() => deleteTask(task.id)}
+              style={styles.deleteButton}>
+              <ThemedText style={styles.deleteText}>✕</ThemedText>
+          </Pressable>
+
             <View style={{ flex: 1 }}>
               {/* strikes through name of task because user marked it as complete */}
               <ThemedText style={task.completed ? styles.taskTitleDone : undefined}>
@@ -143,7 +155,7 @@ export default function TasksScreen() {
                   {/* pet status got hit because user missed deadline*/}
                   {isOverdue && (
                     <ThemedText type="small" style={styles.penaltyBadge}>
-                      pet health hit
+                      *pet health hit
                     </ThemedText>
                   )}
                 </View>
@@ -176,9 +188,19 @@ export default function TasksScreen() {
             />
             <input
               type="date"
-              min={new Date().toISOString().split('T')[0]}
+              min={(() => {
+                const d = new Date();
+                return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+              })()}
               value={deadline ? deadline.toISOString().split('T')[0] : ''}
-              onChange={(e) => setDeadline(e.target.value ? new Date(e.target.value) : undefined)}
+              onChange={(e) => {
+                if (!e.target.value) {
+                  setDeadline(undefined);
+                  return;
+                }
+                const [year, month, day] = e.target.value.split('-').map(Number);
+                setDeadline(new Date(year, month - 1, day)); // local time, not UTC
+              }}
               style={{
                 fontSize: 16,
                 paddingTop: 9,
@@ -273,6 +295,8 @@ const styles = StyleSheet.create({
   deadlineRow:     { flexDirection: 'row', gap: Spacing.two, alignItems: 'center', flexWrap: 'wrap' },
   deadlineDate:    { opacity: 0.6 },
   countdown:       { fontWeight: '600' },
-  penaltyBadge:    { color: '#e05252', fontWeight: '600' },
+  penaltyBadge:    { color: '#171426', fontWeight: '600' },
   emptyText:       { fontStyle: 'italic', opacity: 0.6 },
+  deleteButton: { paddingHorizontal: Spacing.two, paddingVertical: Spacing.one, justifyContent: 'center', alignItems: 'center'},
+  deleteText:   { color: '#131732', fontSize: 16, fontWeight: '700' },
 });
