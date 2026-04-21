@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/auth-context';
 import { API_BASE_URL } from '@/constants/api';
-import { Pressable, ScrollView, StyleSheet, Switch, TextInput, TouchableOpacity, Text, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, TextInput, TouchableOpacity, Text, View } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
 import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -13,7 +12,6 @@ export default function SettingsScreen() {
     const { token } = useAuth();
 
     // local state for all editable fields
-    const [pushNotifs, setPushNotifs] = useState(true);
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
     const [username, setUsername] = useState('');
@@ -37,7 +35,6 @@ export default function SettingsScreen() {
             setFirstName(data.firstName ?? '');
             setLastName(data.lastName ?? '');
             setUsername(data.username ?? '');
-            setPushNotifs(data.pushNotifications ?? true);
         } catch (error) {
             console.error('Profile fetch failed:', error);
             alert('Could not connect to the server.');
@@ -133,21 +130,6 @@ export default function SettingsScreen() {
                         </Pressable>
                     </View>
 
-                    {/* Notifications */}
-                    <ThemedText type="smallBold">NOTIFICATIONS</ThemedText>
-                    <ThemedView type="backgroundElement" style={styles.inputWrapper}>
-                        <View style={[styles.taskItem, styles.rowBetween]}>
-                            <ThemedText>Push Notifications</ThemedText>
-                            <Switch onValueChange={async (newValue) => {
-                                setPushNotifs(newValue);
-                                await fetch(`${API_BASE_URL}/api/user/notifications`, {
-                                    method: 'PUT',
-                                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                                    body: JSON.stringify({ pushNotifications: newValue })
-                                });
-                            }} value={pushNotifs} />
-                        </View>
-                    </ThemedView>
 
 
                 </View>
