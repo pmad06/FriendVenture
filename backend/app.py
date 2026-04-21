@@ -66,10 +66,7 @@ def get_profile():
         if not user:
             return jsonify({"error": "User not found"}), 404
 
-        settings = db.execute("SELECT push_notifications FROM user_settings WHERE user_id = ?", (user_id,)).fetchone()
-
-        push_notifications = bool(settings["push_notifications"]) if settings else True
-        return jsonify({"firstName": user["first_name"], "lastName": user["last_name"], "username": user["username"], "role": user["role"], "pushNotifications": push_notifications}), 200
+        return jsonify({"firstName": user["first_name"], "lastName": user["last_name"], "username": user["username"], "role": user["role"]}), 200
     finally:
         db.close()
 
@@ -135,24 +132,6 @@ def change_password():
     finally:
         db.close()
 
-# saves push notification preference for the logged-in user
-@app.route("/api/user/notifications", methods=["PUT"])
-def update_notifications():
-    user_id = get_current_user_id()
-    if not user_id:
-        return jsonify({"error": "Unauthorized"}), 401
-
-    data = request.get_json()
-    enabled = 1 if data.get("pushNotifications") else 0
-
-    db = get_db()
-    try:
-        # insert if no row exists, otherwise update avoids duplicate key errors
-        db.execute("INSERT INTO user_settings (user_id, push_notifications) VALUES (?, ?) ON CONFLICT(user_id) DO UPDATE SET push_notifications = ?", (user_id, enabled, enabled))
-        db.commit()
-        return jsonify({"message": "Settings saved"}), 200
-    finally:
-        db.close()
 
 # ── Users: search ────────────────────────────────────────────────────────────
 
