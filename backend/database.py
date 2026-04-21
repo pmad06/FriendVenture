@@ -57,17 +57,6 @@ def init_db():
             UNIQUE(user_id, friend_id)
         )
     ''')
-
-    # keeping settings separate from users so we can add more later without altering the main table
-    conn.execute('''
-        CREATE TABLE IF NOT EXISTS user_settings (
-            user_id INTEGER PRIMARY KEY,
-            push_notifications INTEGER NOT NULL DEFAULT 1,
-            FOREIGN KEY (user_id) REFERENCES users(id)
-        )
-    ''')
-
-    # deadline is optional so it's nullable
     conn.execute('''
         CREATE TABLE IF NOT EXISTS tasks (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
